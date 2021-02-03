@@ -5,16 +5,103 @@ import (
 	"log"
 )
 
+// TODO: Fix flags everywhere
+
 // ADC performs an add with carry
-// TODO: Implement ADC
+// TODO: When flags are fixed, fix this
 func (c *CPU) ADC(mode AddressMode.AddressMode) {
-	log.Printf("ERR: ADC %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsImmediate(mode):
+		// ADC #$nn
+		c.a, c.ps.carry = AddWithCarry(c.a, c.GetNextByte(), c.ps.carry)
+		c.pc += 2
+	case AddressMode.IsZeroPage(mode):
+		// ADC $ll
+		parameter := c.GetNextByte()
+		c.a, c.ps.carry = AddWithCarry(c.a, c.GetByteAt(uint16(parameter)), c.ps.carry)
+		c.pc += 2
+	case AddressMode.IsZeroPageX(mode):
+		// ADC $ll, X
+		parameter := c.GetNextByte() + c.x
+		c.a, c.ps.carry = AddWithCarry(c.a, c.GetByteAt(uint16(parameter)), c.ps.carry)
+		c.pc += 2
+	case AddressMode.IsAbsolut(mode):
+		// ADC $hhll
+		parameter := c.GetNextWord()
+		c.a, c.ps.carry = AddWithCarry(c.a, c.GetByteAt(parameter), c.ps.carry)
+		c.pc += 3
+	case AddressMode.IsAbsolutX(mode):
+		// ADC $hhll,X
+		parameter := c.GetNextWord() + uint16(c.x)
+		c.a, c.ps.carry = AddWithCarry(c.a, c.GetByteAt(parameter), c.ps.carry)
+		c.pc += 3
+	case AddressMode.IsAbsolutY(mode):
+		// ADC $hhll,Y
+		parameter := c.GetNextWord() + uint16(c.y)
+		c.a, c.ps.carry = AddWithCarry(c.a, c.GetByteAt(parameter), c.ps.carry)
+		c.pc += 3
+	case AddressMode.IsIndirectX(mode):
+		// ADC ($ll,X)
+		highByte := c.GetNextByte()
+		c.a, c.ps.carry = AddWithCarry(c.a, c.GetByteAt(CombineLowHigh(c.x, highByte)), c.ps.carry)
+		c.pc += 2
+	case AddressMode.IsIndirectY(mode):
+		// ADC ($ll),Y
+		parameter := c.GetNextByte()
+		addr := c.GetWordAt(uint16(parameter)) + uint16(c.y)
+		c.a, c.ps.carry = AddWithCarry(c.a, c.GetByteAt(addr), c.ps.carry)
+		c.pc += 2
+	default:
+		log.Printf("ERR: ADC %s is not valid\n", mode.SelectedMode)
+	}
 }
 
 // AND performs an and with the accumulator
-// TODO: Implement AND
 func (c *CPU) AND(mode AddressMode.AddressMode) {
-	log.Printf("ERR: AND %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsImmediate(mode):
+		// AND #$nn
+		c.a = c.GetNextByte() & c.a
+		c.pc += 2
+	case AddressMode.IsZeroPage(mode):
+		// AND $ll
+		parameter := c.GetNextByte()
+		c.a = c.GetByteAt(uint16(parameter)) & c.a
+		c.pc += 2
+	case AddressMode.IsZeroPageX(mode):
+		// AND $ll, X
+		parameter := c.GetNextByte() + c.x
+		c.a = c.GetByteAt(uint16(parameter)) & c.a
+		c.pc += 2
+	case AddressMode.IsAbsolut(mode):
+		// AND $hhll
+		parameter := c.GetNextWord()
+		c.a = c.GetByteAt(parameter) & c.a
+		c.pc += 3
+	case AddressMode.IsAbsolutX(mode):
+		// AND $hhll,X
+		parameter := c.GetNextWord() + uint16(c.x)
+		c.a = c.GetByteAt(parameter) & c.a
+		c.pc += 3
+	case AddressMode.IsAbsolutY(mode):
+		// AND $hhll,Y
+		parameter := c.GetNextWord() + uint16(c.y)
+		c.a = c.GetByteAt(parameter) & c.a
+		c.pc += 3
+	case AddressMode.IsIndirectX(mode):
+		// AND ($ll,X)
+		highByte := c.GetNextByte()
+		c.a = c.GetByteAt(CombineLowHigh(c.x, highByte)) & c.a
+		c.pc += 2
+	case AddressMode.IsIndirectY(mode):
+		// AND ($ll),Y
+		parameter := c.GetNextByte()
+		addr := c.GetWordAt(uint16(parameter)) + uint16(c.y)
+		c.a = c.GetByteAt(addr) & c.a
+		c.pc += 2
+	default:
+		log.Printf("ERR: AND %s is not valid\n", mode.SelectedMode)
+	}
 }
 
 // ASL performs an arithmetic shift left
@@ -117,7 +204,6 @@ func (c *CPU) CLI(mode AddressMode.AddressMode) {
 }
 
 // CLV clears the overflow flag
-// TODO: Implement CLV
 func (c *CPU) CLV(mode AddressMode.AddressMode) {
 	switch {
 	case AddressMode.IsImplied(mode):
