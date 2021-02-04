@@ -1,6 +1,7 @@
 package Memory
 
 import (
+	"io/ioutil"
 	"os"
 )
 
@@ -44,13 +45,16 @@ func (m *Memory) Reset() {
 		if err != nil {
 			panic(err.Error())
 		}
-		defer file.Close()
 		_, err = file.Write(m.data[:])
 		if err != nil {
 			panic(err.Error())
 		}
+		err = file.Close()
+		if err != nil {
+			panic(err.Error())
+		}
 	} else {
-		bytes, err := os.ReadFile("mem.bin")
+		bytes, err := ioutil.ReadFile("mem.bin")
 		if err != nil {
 			panic(err.Error())
 		}
