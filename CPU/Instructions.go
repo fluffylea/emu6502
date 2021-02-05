@@ -5,10 +5,7 @@ import (
 	"log"
 )
 
-// TODO: Fix flags everywhere
-
 // ADC performs an add with carry
-// TODO: When flags are fixed, fix this
 func (c *CPU) ADC(mode AddressMode.AddressMode) {
 	switch {
 	case AddressMode.IsImmediate(mode):

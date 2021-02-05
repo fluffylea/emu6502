@@ -1,7 +1,6 @@
 package CPU
 
 // AddWithCarry adds two numbers with carry
-// TODO AddWithCarry should probably return the entire processor status
 func (c *CPU) AddWithCarry(number1 uint8, number2 uint8) (result uint8) {
 	// Convert to 16-Bit variables
 	num1Word := uint16(number1)
@@ -12,8 +11,13 @@ func (c *CPU) AddWithCarry(number1 uint8, number2 uint8) (result uint8) {
 	}
 	// Do the calculation
 	addResult := num1Word + num2Word
-	// If the result is bigger than one byte, set the carry flag
-	c.ps.carry = addResult > 0xFF
+
+	// Set the overflow and carry flag
+	// http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html
+	var c6 uint8 = ((number1 & 0b01111111) + (number2 & 0b01111111)) >> 7
+	var c7 uint8 = uint8(addResult >> 8)
+	c.ps.overflow = (c6^c7)&0b00000001 == 1
+	c.ps.carry = c7 > 0
 	// Turn the result into a byte again
 	result = uint8(addResult)
 
