@@ -24,6 +24,12 @@ func (c *CPU) AddWithCarry(number1 uint8, number2 uint8) (result uint8) {
 	return result
 }
 
+// ArithmeticShiftLeft performs an ASR and puts the shifted out bit into the carry flag
+func (c *CPU) ArithmeticShiftLeft(number uint8) uint8 {
+	c.ps.carry = number&0b10000000 > 0
+	return number << 1
+}
+
 // CheckZeroAndSetFlag checks if the number is zero and sets the flag accordingly
 func (c *CPU) CheckZeroAndSetFlag(number uint8) {
 	c.ps.zero = number == 0

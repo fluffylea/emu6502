@@ -104,9 +104,42 @@ func (c *CPU) AND(mode AddressMode.AddressMode) {
 }
 
 // ASL performs an arithmetic shift left
-// TODO: Implement ASL
 func (c *CPU) ASL(mode AddressMode.AddressMode) {
-	log.Printf("ERR: ASL %s is not implemented\n", mode.SelectedMode)
+	var tmp uint8 = 0
+	switch {
+	case AddressMode.IsAccumulator(mode):
+		// ASL
+		c.a = c.ArithmeticShiftLeft(c.a)
+		c.pc += 2
+	case AddressMode.IsZeroPage(mode):
+		// ASL $ll
+		parameter := c.GetNextByte()
+		tmp = c.ArithmeticShiftLeft(c.GetByteAt(uint16(parameter)))
+		c.SetByteAt(uint16(parameter), tmp)
+		c.pc += 2
+	case AddressMode.IsZeroPageX(mode):
+		// ASL $ll, X
+		parameter := c.GetNextByte() + c.x
+		tmp = c.ArithmeticShiftLeft(c.GetByteAt(uint16(parameter)))
+		c.SetByteAt(uint16(parameter), tmp)
+		c.pc += 2
+	case AddressMode.IsAbsolut(mode):
+		// ASL $hhll
+		parameter := c.GetNextWord()
+		tmp = c.ArithmeticShiftLeft(c.GetByteAt(parameter))
+		c.SetByteAt(parameter, tmp)
+		c.pc += 3
+	case AddressMode.IsAbsolutX(mode):
+		// ASL $hhll,X
+		parameter := c.GetNextWord() + uint16(c.x)
+		tmp = c.ArithmeticShiftLeft(c.GetByteAt(parameter))
+		c.SetByteAt(parameter, tmp)
+		c.pc += 3
+	default:
+		log.Printf("ERR: ASL %s is not valid\n", mode.SelectedMode)
+	}
+	c.CheckNegativeAndSetFlag(tmp)
+	c.CheckZeroAndSetFlag(tmp)
 }
 
 // BCC branches on carry clear
