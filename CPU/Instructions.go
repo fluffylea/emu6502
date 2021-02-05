@@ -13,43 +13,43 @@ func (c *CPU) ADC(mode AddressMode.AddressMode) {
 	switch {
 	case AddressMode.IsImmediate(mode):
 		// ADC #$nn
-		c.a, c.ps.carry = AddWithCarry(c.a, c.GetNextByte(), c.ps.carry)
+		c.a = c.AddWithCarry(c.a, c.GetNextByte())
 		c.pc += 2
 	case AddressMode.IsZeroPage(mode):
 		// ADC $ll
 		parameter := c.GetNextByte()
-		c.a, c.ps.carry = AddWithCarry(c.a, c.GetByteAt(uint16(parameter)), c.ps.carry)
+		c.a = c.AddWithCarry(c.a, c.GetByteAt(uint16(parameter)))
 		c.pc += 2
 	case AddressMode.IsZeroPageX(mode):
 		// ADC $ll, X
 		parameter := c.GetNextByte() + c.x
-		c.a, c.ps.carry = AddWithCarry(c.a, c.GetByteAt(uint16(parameter)), c.ps.carry)
+		c.a = c.AddWithCarry(c.a, c.GetByteAt(uint16(parameter)))
 		c.pc += 2
 	case AddressMode.IsAbsolut(mode):
 		// ADC $hhll
 		parameter := c.GetNextWord()
-		c.a, c.ps.carry = AddWithCarry(c.a, c.GetByteAt(parameter), c.ps.carry)
+		c.a = c.AddWithCarry(c.a, c.GetByteAt(parameter))
 		c.pc += 3
 	case AddressMode.IsAbsolutX(mode):
 		// ADC $hhll,X
 		parameter := c.GetNextWord() + uint16(c.x)
-		c.a, c.ps.carry = AddWithCarry(c.a, c.GetByteAt(parameter), c.ps.carry)
+		c.a = c.AddWithCarry(c.a, c.GetByteAt(parameter))
 		c.pc += 3
 	case AddressMode.IsAbsolutY(mode):
 		// ADC $hhll,Y
 		parameter := c.GetNextWord() + uint16(c.y)
-		c.a, c.ps.carry = AddWithCarry(c.a, c.GetByteAt(parameter), c.ps.carry)
+		c.a = c.AddWithCarry(c.a, c.GetByteAt(parameter))
 		c.pc += 3
 	case AddressMode.IsIndirectX(mode):
 		// ADC ($ll,X)
 		highByte := c.GetNextByte()
-		c.a, c.ps.carry = AddWithCarry(c.a, c.GetByteAt(CombineLowHigh(c.x, highByte)), c.ps.carry)
+		c.a = c.AddWithCarry(c.a, c.GetByteAt(CombineLowHigh(c.x, highByte)))
 		c.pc += 2
 	case AddressMode.IsIndirectY(mode):
 		// ADC ($ll),Y
 		parameter := c.GetNextByte()
 		addr := c.GetWordAt(uint16(parameter)) + uint16(c.y)
-		c.a, c.ps.carry = AddWithCarry(c.a, c.GetByteAt(addr), c.ps.carry)
+		c.a = c.AddWithCarry(c.a, c.GetByteAt(addr))
 		c.pc += 2
 	default:
 		log.Printf("ERR: ADC %s is not valid\n", mode.SelectedMode)
@@ -102,6 +102,8 @@ func (c *CPU) AND(mode AddressMode.AddressMode) {
 	default:
 		log.Printf("ERR: AND %s is not valid\n", mode.SelectedMode)
 	}
+	c.CheckNegativeAndSetFlag(c.a)
+	c.CheckZeroAndSetFlag(c.a)
 }
 
 // ASL performs an arithmetic shift left
@@ -247,6 +249,8 @@ func (c *CPU) DEX(mode AddressMode.AddressMode) {
 	default:
 		log.Printf("ERR: DEX %s is not valid\n", mode.SelectedMode)
 	}
+	c.CheckZeroAndSetFlag(c.x)
+	c.CheckNegativeAndSetFlag(c.x)
 }
 
 // DEY decrements Y
@@ -258,6 +262,8 @@ func (c *CPU) DEY(mode AddressMode.AddressMode) {
 	default:
 		log.Printf("ERR: DEY %s is not valid\n", mode.SelectedMode)
 	}
+	c.CheckZeroAndSetFlag(c.y)
+	c.CheckNegativeAndSetFlag(c.y)
 }
 
 // EOR performs an exclusive or with the accumulator
@@ -281,6 +287,8 @@ func (c *CPU) INX(mode AddressMode.AddressMode) {
 	default:
 		log.Printf("ERR: INX %s is not valid\n", mode.SelectedMode)
 	}
+	c.CheckZeroAndSetFlag(c.x)
+	c.CheckNegativeAndSetFlag(c.x)
 }
 
 // INY increments Y
@@ -292,6 +300,8 @@ func (c *CPU) INY(mode AddressMode.AddressMode) {
 	default:
 		log.Printf("ERR: INY %s is not valid\n", mode.SelectedMode)
 	}
+	c.CheckZeroAndSetFlag(c.y)
+	c.CheckNegativeAndSetFlag(c.y)
 }
 
 // JMP sets the program counter to the new value to continue
@@ -360,6 +370,8 @@ func (c *CPU) LDA(mode AddressMode.AddressMode) {
 	default:
 		log.Printf("ERR: LDA %s is not valid\n", mode.SelectedMode)
 	}
+	c.CheckZeroAndSetFlag(c.a)
+	c.CheckNegativeAndSetFlag(c.a)
 }
 
 // LDX loads a value into X
@@ -392,6 +404,8 @@ func (c *CPU) LDX(mode AddressMode.AddressMode) {
 	default:
 		log.Printf("ERR: LDX %s is not valid\n", mode.SelectedMode)
 	}
+	c.CheckZeroAndSetFlag(c.x)
+	c.CheckNegativeAndSetFlag(c.x)
 }
 
 // LDY loads a value into Y
@@ -424,6 +438,8 @@ func (c *CPU) LDY(mode AddressMode.AddressMode) {
 	default:
 		log.Printf("ERR: LDY %s is not valid\n", mode.SelectedMode)
 	}
+	c.CheckZeroAndSetFlag(c.y)
+	c.CheckNegativeAndSetFlag(c.y)
 }
 
 // LSR performs a logical shift right
@@ -630,52 +646,52 @@ func (c *CPU) STY(mode AddressMode.AddressMode) {
 func (c *CPU) TAX(mode AddressMode.AddressMode) {
 	switch {
 	case AddressMode.IsImplied(mode):
-		c.ps.zero = c.a == 0
-		c.ps.negative = c.a&128 == 128
 		c.x = c.a
 		c.pc++
 	default:
 		log.Printf("ERR: TAX %s is not valid\n", mode.SelectedMode)
 	}
+	c.CheckZeroAndSetFlag(c.x)
+	c.CheckNegativeAndSetFlag(c.x)
 }
 
 // TAY transfers the accumulator to Y
 func (c *CPU) TAY(mode AddressMode.AddressMode) {
 	switch {
 	case AddressMode.IsImplied(mode):
-		c.ps.zero = c.a == 0
-		c.ps.negative = c.a&128 == 128
 		c.y = c.a
 		c.pc++
 	default:
 		log.Printf("ERR: TAY %s is not valid\n", mode.SelectedMode)
 	}
+	c.CheckZeroAndSetFlag(c.y)
+	c.CheckNegativeAndSetFlag(c.y)
 }
 
 // TSX transfers the stack pointer to X
 func (c *CPU) TSX(mode AddressMode.AddressMode) {
 	switch {
 	case AddressMode.IsImplied(mode):
-		c.ps.zero = c.sp == 0
-		c.ps.negative = c.sp&128 == 128
 		c.x = c.sp
 		c.pc++
 	default:
 		log.Printf("ERR: TSX %s is not valid\n", mode.SelectedMode)
 	}
+	c.CheckZeroAndSetFlag(c.x)
+	c.CheckNegativeAndSetFlag(c.x)
 }
 
 // TXA transfers X to the accumulator
 func (c *CPU) TXA(mode AddressMode.AddressMode) {
 	switch {
 	case AddressMode.IsImplied(mode):
-		c.ps.zero = c.x == 0
-		c.ps.negative = c.x&128 == 128
 		c.a = c.x
 		c.pc++
 	default:
 		log.Printf("ERR: TXA %s is not valid\n", mode.SelectedMode)
 	}
+	c.CheckZeroAndSetFlag(c.a)
+	c.CheckNegativeAndSetFlag(c.a)
 }
 
 // TXS transfers X to the stack pointer
@@ -693,11 +709,11 @@ func (c *CPU) TXS(mode AddressMode.AddressMode) {
 func (c *CPU) TYA(mode AddressMode.AddressMode) {
 	switch {
 	case AddressMode.IsImplied(mode):
-		c.ps.zero = c.y == 0
-		c.ps.negative = c.y&128 == 128
 		c.a = c.y
 		c.pc++
 	default:
 		log.Printf("ERR: TXA %s is not valid\n", mode.SelectedMode)
 	}
+	c.CheckZeroAndSetFlag(c.a)
+	c.CheckNegativeAndSetFlag(c.a)
 }
