@@ -367,6 +367,19 @@ func (c *CPU) Run() {
 	}
 }
 
+func (c *CPU) GetPS() uint8 {
+	var ps [8]bool
+	ps[0] = c.ps.negative
+	ps[1] = c.ps.overflow
+	ps[2] = true
+	ps[3] = c.ps.brk
+	ps[4] = c.ps.decimal
+	ps[5] = c.ps.intDisable
+	ps[6] = c.ps.zero
+	ps[7] = c.ps.carry
+	return ConvertBitsToUint8(ps)
+}
+
 func (c *CPU) ToString() string {
-	return fmt.Sprintf("PC: 0x%04x; SP: 0x%02x; A: 0x%02x; X: 0x%02x; Y: 0x%02x", c.pc, c.sp, c.a, c.x, c.y)
+	return fmt.Sprintf("PC: 0x%04x; SP: 0x%02x; A: 0x%02x; X: 0x%02x; Y: 0x%02x; NV-BDIZC: %08b", c.pc, c.sp, c.a, c.x, c.y, c.GetPS())
 }
