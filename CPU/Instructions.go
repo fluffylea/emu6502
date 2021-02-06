@@ -543,9 +543,51 @@ func (c *CPU) RTS(mode AddressMode.AddressMode) {
 }
 
 // SBC subtracts with carry
-// TODO: Implement SBC
 func (c *CPU) SBC(mode AddressMode.AddressMode) {
-	log.Printf("ERR: SBC %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsImmediate(mode):
+		// SBC #$nn
+		c.a = c.SubtractWithCarry(c.a, c.GetNextByte())
+		c.pc += 2
+	case AddressMode.IsZeroPage(mode):
+		// SBC $ll
+		parameter := c.GetNextByte()
+		c.a = c.SubtractWithCarry(c.a, c.GetByteAt(uint16(parameter)))
+		c.pc += 2
+	case AddressMode.IsZeroPageX(mode):
+		// SBC $ll, X
+		parameter := c.GetNextByte() + c.x
+		c.a = c.SubtractWithCarry(c.a, c.GetByteAt(uint16(parameter)))
+		c.pc += 2
+	case AddressMode.IsAbsolut(mode):
+		// SBC $hhll
+		parameter := c.GetNextWord()
+		c.a = c.SubtractWithCarry(c.a, c.GetByteAt(parameter))
+		c.pc += 3
+	case AddressMode.IsAbsolutX(mode):
+		// SBC $hhll,X
+		parameter := c.GetNextWord() + uint16(c.x)
+		c.a = c.SubtractWithCarry(c.a, c.GetByteAt(parameter))
+		c.pc += 3
+	case AddressMode.IsAbsolutY(mode):
+		// SBC $hhll,Y
+		parameter := c.GetNextWord() + uint16(c.y)
+		c.a = c.SubtractWithCarry(c.a, c.GetByteAt(parameter))
+		c.pc += 3
+	case AddressMode.IsIndirectX(mode):
+		// SBC ($ll,X)
+		highByte := c.GetNextByte()
+		c.a = c.SubtractWithCarry(c.a, c.GetByteAt(CombineLowHigh(c.x, highByte)))
+		c.pc += 2
+	case AddressMode.IsIndirectY(mode):
+		// SBC ($ll),Y
+		parameter := c.GetNextByte()
+		addr := c.GetWordAt(uint16(parameter)) + uint16(c.y)
+		c.a = c.SubtractWithCarry(c.a, c.GetByteAt(addr))
+		c.pc += 2
+	default:
+		log.Printf("ERR: SBC %s is not valid\n", mode.SelectedMode)
+	}
 }
 
 // SEC sets the carry flag

@@ -1,5 +1,47 @@
 package CPU
 
+import "unsafe"
+
+// Uint8ToInt8 does what they tell you not to do:
+// Convert the data type without touching the bits
+func Uint8ToInt8(i uint8) int8 {
+	return *(*int8)(unsafe.Pointer(&i))
+}
+
+// SubtractWithCarry is a helper function for subtracting
+func SubtractWithCarry(number1 uint8, number2 uint8, carry bool) (result uint8, newOverflow bool, newCarry bool) {
+	// Convert the Carry flag into a usable number
+	var c uint16 = 0
+	if carry {
+		c = 1
+	}
+	// Perform the calculation: Sum of the One's complement plus the carry flag
+	var res uint16 = uint16(number1) + uint16(^number2) + c
+
+	// Check if the calculation would land us outside the borders of a 8 Bit signed Int
+	var resInt = int16(Uint8ToInt8(number1)) + int16(Uint8ToInt8(^number2)) + int16(c)
+	newOverflow = resInt > 127 || resInt < -128
+
+	// Check if the result doesn't fit in one Byte
+	var c7 uint8 = uint8(res >> 8)
+	newCarry = c7 > 0
+
+	// Turn the result into a byte
+	result = uint8(res)
+
+	return
+}
+
+// SubtractWithCarry subtracts two number with carry
+func (c *CPU) SubtractWithCarry(number1 uint8, number2 uint8) (result uint8) {
+	result, c.ps.overflow, c.ps.carry = SubtractWithCarry(number1, number2, c.ps.carry)
+
+	c.CheckNegativeAndSetFlag(result)
+	c.CheckZeroAndSetFlag(result)
+
+	return result
+}
+
 // AddWithCarry adds two numbers with carry
 func (c *CPU) AddWithCarry(number1 uint8, number2 uint8) (result uint8) {
 	// Convert to 16-Bit variables
@@ -20,6 +62,9 @@ func (c *CPU) AddWithCarry(number1 uint8, number2 uint8) (result uint8) {
 	c.ps.carry = c7 > 0
 	// Turn the result into a byte again
 	result = uint8(addResult)
+
+	c.CheckZeroAndSetFlag(result)
+	c.CheckNegativeAndSetFlag(result)
 
 	return result
 }
