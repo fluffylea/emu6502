@@ -42,6 +42,15 @@ func (c *CPU) SubtractWithCarry(number1 uint8, number2 uint8) (result uint8) {
 	return result
 }
 
+// Compare compares two numbers and sets the Carry, Negative and Zero flags accordingly
+// Separate function is necessary because CMP doesn't set the overflow flag
+func (c *CPU) Compare(number1 uint8, number2 uint8) {
+	var res uint8
+	res, _, c.ps.carry = SubtractWithCarry(number1, number2, true)
+	c.CheckNegativeAndSetFlag(res)
+	c.CheckZeroAndSetFlag(res)
+}
+
 // AddWithCarry adds two numbers with carry
 func (c *CPU) AddWithCarry(number1 uint8, number2 uint8) (result uint8) {
 	// Convert to 16-Bit variables

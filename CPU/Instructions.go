@@ -247,27 +247,130 @@ func (c *CPU) CLV(mode AddressMode.AddressMode) {
 }
 
 // CMP compares with the accumulator
-// TODO: Implement CMP
 func (c *CPU) CMP(mode AddressMode.AddressMode) {
-	log.Printf("ERR: CMP %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsImmediate(mode):
+		// CMP #$nn
+		c.Compare(c.a, c.GetNextByte())
+		c.pc += 2
+	case AddressMode.IsZeroPage(mode):
+		// CMP $ll
+		parameter := c.GetNextByte()
+		c.Compare(c.a, c.GetByteAt(uint16(parameter)))
+		c.pc += 2
+	case AddressMode.IsZeroPageX(mode):
+		// CMP $ll, X
+		parameter := c.GetNextByte() + c.x
+		c.Compare(c.a, c.GetByteAt(uint16(parameter)))
+		c.pc += 2
+	case AddressMode.IsAbsolut(mode):
+		// CMP $hhll
+		parameter := c.GetNextWord()
+		c.Compare(c.a, c.GetByteAt(parameter))
+		c.pc += 3
+	case AddressMode.IsAbsolutX(mode):
+		// CMP $hhll,X
+		parameter := c.GetNextWord() + uint16(c.x)
+		c.Compare(c.a, c.GetByteAt(parameter))
+		c.pc += 3
+	case AddressMode.IsAbsolutY(mode):
+		// CMP $hhll,Y
+		parameter := c.GetNextWord() + uint16(c.y)
+		c.Compare(c.a, c.GetByteAt(parameter))
+		c.pc += 3
+	case AddressMode.IsIndirectX(mode):
+		// CMP ($ll,X)
+		highByte := c.GetNextByte()
+		c.Compare(c.a, c.GetByteAt(CombineLowHigh(c.x, highByte)))
+		c.pc += 2
+	case AddressMode.IsIndirectY(mode):
+		// CMP ($ll),Y
+		parameter := c.GetNextByte()
+		addr := c.GetWordAt(uint16(parameter)) + uint16(c.y)
+		c.Compare(c.a, c.GetByteAt(addr))
+		c.pc += 2
+	default:
+		log.Printf("ERR: CMP %s is not valid\n", mode.SelectedMode)
+	}
 }
 
 // CPX compares with X
-// TODO: Implement CPX
 func (c *CPU) CPX(mode AddressMode.AddressMode) {
-	log.Printf("ERR: CPX %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsImmediate(mode):
+		// CPX #$nn
+		c.Compare(c.x, c.GetNextByte())
+		c.pc += 2
+	case AddressMode.IsZeroPage(mode):
+		// CPX $ll
+		parameter := c.GetNextByte()
+		c.Compare(c.x, c.GetByteAt(uint16(parameter)))
+		c.pc += 2
+	case AddressMode.IsAbsolut(mode):
+		// CPX $hhll
+		parameter := c.GetNextWord()
+		c.Compare(c.x, c.GetByteAt(parameter))
+		c.pc += 3
+	default:
+		log.Printf("ERR: CPX %s is not valid\n", mode.SelectedMode)
+	}
 }
 
 // CPY compares with Y
-// TODO: Implement CPY
 func (c *CPU) CPY(mode AddressMode.AddressMode) {
-	log.Printf("ERR: CPY %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsImmediate(mode):
+		// CPY #$nn
+		c.Compare(c.y, c.GetNextByte())
+		c.pc += 2
+	case AddressMode.IsZeroPage(mode):
+		// CPY $ll
+		parameter := c.GetNextByte()
+		c.Compare(c.y, c.GetByteAt(uint16(parameter)))
+		c.pc += 2
+	case AddressMode.IsAbsolut(mode):
+		// CPY $hhll
+		parameter := c.GetNextWord()
+		c.Compare(c.y, c.GetByteAt(parameter))
+		c.pc += 3
+	default:
+		log.Printf("ERR: CPY %s is not valid\n", mode.SelectedMode)
+	}
 }
 
 // DEC decrements memory
-// TODO: Implement DEC
 func (c *CPU) DEC(mode AddressMode.AddressMode) {
-	log.Printf("ERR: DEC %s is not implemented\n", mode.SelectedMode)
+	var tmp uint8
+	switch {
+	case AddressMode.IsZeroPage(mode):
+		// DEC $ll
+		parameter := c.GetNextByte()
+		tmp = c.GetByteAt(uint16(parameter)) - 1
+		c.SetByteAt(uint16(parameter), tmp)
+		c.pc += 2
+	case AddressMode.IsZeroPageX(mode):
+		// DEC $ll, X
+		parameter := c.GetNextByte() + c.x
+		tmp = c.GetByteAt(uint16(parameter)) - 1
+		c.SetByteAt(uint16(parameter), tmp)
+		c.pc += 2
+	case AddressMode.IsAbsolut(mode):
+		// DEC $hhll
+		parameter := c.GetNextWord()
+		tmp = c.GetByteAt(parameter) - 1
+		c.SetByteAt(parameter, tmp)
+		c.pc += 3
+	case AddressMode.IsAbsolutX(mode):
+		// DEC $hhll,X
+		parameter := c.GetNextWord() + uint16(c.x)
+		tmp = c.GetByteAt(parameter) - 1
+		c.SetByteAt(parameter, tmp)
+		c.pc += 3
+	default:
+		log.Printf("ERR: DEC %s is not valid\n", mode.SelectedMode)
+	}
+	c.CheckNegativeAndSetFlag(c.a)
+	c.CheckZeroAndSetFlag(c.a)
 }
 
 // DEX decrements X
@@ -297,15 +400,88 @@ func (c *CPU) DEY(mode AddressMode.AddressMode) {
 }
 
 // EOR performs an exclusive or with the accumulator
-// TODO: Implement EOR
 func (c *CPU) EOR(mode AddressMode.AddressMode) {
-	log.Printf("ERR: EOR %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsImmediate(mode):
+		// EOR #$nn
+		c.a = c.GetNextByte() ^ c.a
+		c.pc += 2
+	case AddressMode.IsZeroPage(mode):
+		// EOR $ll
+		parameter := c.GetNextByte()
+		c.a = c.GetByteAt(uint16(parameter)) ^ c.a
+		c.pc += 2
+	case AddressMode.IsZeroPageX(mode):
+		// EOR $ll, X
+		parameter := c.GetNextByte() + c.x
+		c.a = c.GetByteAt(uint16(parameter)) ^ c.a
+		c.pc += 2
+	case AddressMode.IsAbsolut(mode):
+		// EOR $hhll
+		parameter := c.GetNextWord()
+		c.a = c.GetByteAt(parameter) ^ c.a
+		c.pc += 3
+	case AddressMode.IsAbsolutX(mode):
+		// EOR $hhll,X
+		parameter := c.GetNextWord() + uint16(c.x)
+		c.a = c.GetByteAt(parameter) ^ c.a
+		c.pc += 3
+	case AddressMode.IsAbsolutY(mode):
+		// EOR $hhll,Y
+		parameter := c.GetNextWord() + uint16(c.y)
+		c.a = c.GetByteAt(parameter) ^ c.a
+		c.pc += 3
+	case AddressMode.IsIndirectX(mode):
+		// EOR ($ll,X)
+		highByte := c.GetNextByte()
+		c.a = c.GetByteAt(CombineLowHigh(c.x, highByte)) ^ c.a
+		c.pc += 2
+	case AddressMode.IsIndirectY(mode):
+		// EOR ($ll),Y
+		parameter := c.GetNextByte()
+		addr := c.GetWordAt(uint16(parameter)) + uint16(c.y)
+		c.a = c.GetByteAt(addr) ^ c.a
+		c.pc += 2
+	default:
+		log.Printf("ERR: EOR %s is not valid\n", mode.SelectedMode)
+	}
+	c.CheckNegativeAndSetFlag(c.a)
+	c.CheckZeroAndSetFlag(c.a)
 }
 
 // INC increments memory
-// TODO: Implement INC
 func (c *CPU) INC(mode AddressMode.AddressMode) {
-	log.Printf("ERR: INC %s is not implemented\n", mode.SelectedMode)
+	var tmp uint8
+	switch {
+	case AddressMode.IsZeroPage(mode):
+		// INC $ll
+		parameter := c.GetNextByte()
+		tmp = c.GetByteAt(uint16(parameter)) + 1
+		c.SetByteAt(uint16(parameter), tmp)
+		c.pc += 2
+	case AddressMode.IsZeroPageX(mode):
+		// INC $ll, X
+		parameter := c.GetNextByte() + c.x
+		tmp = c.GetByteAt(uint16(parameter)) + 1
+		c.SetByteAt(uint16(parameter), tmp)
+		c.pc += 2
+	case AddressMode.IsAbsolut(mode):
+		// INC $hhll
+		parameter := c.GetNextWord()
+		tmp = c.GetByteAt(parameter) + 1
+		c.SetByteAt(parameter, tmp)
+		c.pc += 3
+	case AddressMode.IsAbsolutX(mode):
+		// INC $hhll,X
+		parameter := c.GetNextWord() + uint16(c.x)
+		tmp = c.GetByteAt(parameter) + 1
+		c.SetByteAt(parameter, tmp)
+		c.pc += 3
+	default:
+		log.Printf("ERR: INC %s is not valid\n", mode.SelectedMode)
+	}
+	c.CheckNegativeAndSetFlag(c.a)
+	c.CheckZeroAndSetFlag(c.a)
 }
 
 // INX increments X
