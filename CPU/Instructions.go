@@ -665,9 +665,53 @@ func (c *CPU) NOP(mode AddressMode.AddressMode) {
 }
 
 // ORA ors with the accumulator
-// TODO: Implement ORA
 func (c *CPU) ORA(mode AddressMode.AddressMode) {
-	log.Printf("ERR: ORA %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsImmediate(mode):
+		// ORA #$nn
+		c.a = c.GetNextByte() | c.a
+		c.pc += 2
+	case AddressMode.IsZeroPage(mode):
+		// ORA $ll
+		parameter := c.GetNextByte()
+		c.a = c.GetByteAt(uint16(parameter)) | c.a
+		c.pc += 2
+	case AddressMode.IsZeroPageX(mode):
+		// ORA $ll, X
+		parameter := c.GetNextByte() + c.x
+		c.a = c.GetByteAt(uint16(parameter)) | c.a
+		c.pc += 2
+	case AddressMode.IsAbsolut(mode):
+		// ORA $hhll
+		parameter := c.GetNextWord()
+		c.a = c.GetByteAt(parameter) | c.a
+		c.pc += 3
+	case AddressMode.IsAbsolutX(mode):
+		// ORA $hhll,X
+		parameter := c.GetNextWord() + uint16(c.x)
+		c.a = c.GetByteAt(parameter) | c.a
+		c.pc += 3
+	case AddressMode.IsAbsolutY(mode):
+		// ORA $hhll,Y
+		parameter := c.GetNextWord() + uint16(c.y)
+		c.a = c.GetByteAt(parameter) | c.a
+		c.pc += 3
+	case AddressMode.IsIndirectX(mode):
+		// ORA ($ll,X)
+		highByte := c.GetNextByte()
+		c.a = c.GetByteAt(CombineLowHigh(c.x, highByte)) | c.a
+		c.pc += 2
+	case AddressMode.IsIndirectY(mode):
+		// ORA ($ll),Y
+		parameter := c.GetNextByte()
+		addr := c.GetWordAt(uint16(parameter)) + uint16(c.y)
+		c.a = c.GetByteAt(addr) | c.a
+		c.pc += 2
+	default:
+		log.Printf("ERR: ORA %s is not valid\n", mode.SelectedMode)
+	}
+	c.CheckNegativeAndSetFlag(c.a)
+	c.CheckZeroAndSetFlag(c.a)
 }
 
 // PHA push accumulator to the stack

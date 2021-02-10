@@ -359,7 +359,7 @@ func (c *CPU) Run() {
 		case 0x98:
 			c.TYA(AddressMode.Implied())
 		}
-		log.Println(c.ToString())
+		log.Print(c.ToString())
 
 		if !scanner.Scan() {
 			break
