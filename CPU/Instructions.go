@@ -649,9 +649,42 @@ func (c *CPU) LDY(mode AddressMode.AddressMode) {
 }
 
 // LSR performs a logical shift right
-// TODO: Implement LSR
 func (c *CPU) LSR(mode AddressMode.AddressMode) {
-	log.Printf("ERR: LSR %s is not implemented\n", mode.SelectedMode)
+	var tmp uint8 = 0
+	switch {
+	case AddressMode.IsAccumulator(mode):
+		// LSR
+		c.a = c.LogicalShiftRight(c.a)
+		c.pc += 2
+	case AddressMode.IsZeroPage(mode):
+		// LSR $ll
+		parameter := c.GetNextByte()
+		tmp = c.LogicalShiftRight(c.GetByteAt(uint16(parameter)))
+		c.SetByteAt(uint16(parameter), tmp)
+		c.pc += 2
+	case AddressMode.IsZeroPageX(mode):
+		// LSR $ll, X
+		parameter := c.GetNextByte() + c.x
+		tmp = c.LogicalShiftRight(c.GetByteAt(uint16(parameter)))
+		c.SetByteAt(uint16(parameter), tmp)
+		c.pc += 2
+	case AddressMode.IsAbsolut(mode):
+		// LSR $hhll
+		parameter := c.GetNextWord()
+		tmp = c.LogicalShiftRight(c.GetByteAt(parameter))
+		c.SetByteAt(parameter, tmp)
+		c.pc += 3
+	case AddressMode.IsAbsolutX(mode):
+		// LSR $hhll,X
+		parameter := c.GetNextWord() + uint16(c.x)
+		tmp = c.LogicalShiftRight(c.GetByteAt(parameter))
+		c.SetByteAt(parameter, tmp)
+		c.pc += 3
+	default:
+		log.Printf("ERR: LSR %s is not valid\n", mode.SelectedMode)
+	}
+	c.CheckNegativeAndSetFlag(tmp)
+	c.CheckZeroAndSetFlag(tmp)
 }
 
 // NOP does nothing
@@ -739,15 +772,81 @@ func (c *CPU) PLP(mode AddressMode.AddressMode) {
 }
 
 // ROL rotates left
-// TODO: Implement ROL
 func (c *CPU) ROL(mode AddressMode.AddressMode) {
-	log.Printf("ERR: ROL %s is not implemented\n", mode.SelectedMode)
+	var tmp uint8 = 0
+	switch {
+	case AddressMode.IsAccumulator(mode):
+		// ROL
+		c.a = c.RotateLeft(c.a)
+		c.pc += 2
+	case AddressMode.IsZeroPage(mode):
+		// ROL $ll
+		parameter := c.GetNextByte()
+		tmp = c.RotateLeft(c.GetByteAt(uint16(parameter)))
+		c.SetByteAt(uint16(parameter), tmp)
+		c.pc += 2
+	case AddressMode.IsZeroPageX(mode):
+		// ROL $ll, X
+		parameter := c.GetNextByte() + c.x
+		tmp = c.RotateLeft(c.GetByteAt(uint16(parameter)))
+		c.SetByteAt(uint16(parameter), tmp)
+		c.pc += 2
+	case AddressMode.IsAbsolut(mode):
+		// ROL $hhll
+		parameter := c.GetNextWord()
+		tmp = c.RotateLeft(c.GetByteAt(parameter))
+		c.SetByteAt(parameter, tmp)
+		c.pc += 3
+	case AddressMode.IsAbsolutX(mode):
+		// ROL $hhll,X
+		parameter := c.GetNextWord() + uint16(c.x)
+		tmp = c.RotateLeft(c.GetByteAt(parameter))
+		c.SetByteAt(parameter, tmp)
+		c.pc += 3
+	default:
+		log.Printf("ERR: ROL %s is not valid\n", mode.SelectedMode)
+	}
+	c.CheckNegativeAndSetFlag(tmp)
+	c.CheckZeroAndSetFlag(tmp)
 }
 
 // ROR rotates right
-// TODO: Implement ROR
 func (c *CPU) ROR(mode AddressMode.AddressMode) {
-	log.Printf("ERR: ROR %s is not implemented\n", mode.SelectedMode)
+	var tmp uint8 = 0
+	switch {
+	case AddressMode.IsAccumulator(mode):
+		// ROR
+		c.a = c.RotateRight(c.a)
+		c.pc += 2
+	case AddressMode.IsZeroPage(mode):
+		// ROR $ll
+		parameter := c.GetNextByte()
+		tmp = c.RotateRight(c.GetByteAt(uint16(parameter)))
+		c.SetByteAt(uint16(parameter), tmp)
+		c.pc += 2
+	case AddressMode.IsZeroPageX(mode):
+		// ROR $ll, X
+		parameter := c.GetNextByte() + c.x
+		tmp = c.RotateRight(c.GetByteAt(uint16(parameter)))
+		c.SetByteAt(uint16(parameter), tmp)
+		c.pc += 2
+	case AddressMode.IsAbsolut(mode):
+		// ROR $hhll
+		parameter := c.GetNextWord()
+		tmp = c.RotateRight(c.GetByteAt(parameter))
+		c.SetByteAt(parameter, tmp)
+		c.pc += 3
+	case AddressMode.IsAbsolutX(mode):
+		// ROR $hhll,X
+		parameter := c.GetNextWord() + uint16(c.x)
+		tmp = c.RotateRight(c.GetByteAt(parameter))
+		c.SetByteAt(parameter, tmp)
+		c.pc += 3
+	default:
+		log.Printf("ERR: ROR %s is not valid\n", mode.SelectedMode)
+	}
+	c.CheckNegativeAndSetFlag(tmp)
+	c.CheckZeroAndSetFlag(tmp)
 }
 
 // RTI returns from interrupt

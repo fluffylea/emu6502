@@ -1,6 +1,9 @@
 package CPU
 
-import "unsafe"
+import (
+	"math/bits"
+	"unsafe"
+)
 
 // Uint8ToInt8 does what they tell you not to do:
 // Convert the data type without touching the bits
@@ -30,6 +33,56 @@ func SubtractWithCarry(number1 uint8, number2 uint8, carry bool) (result uint8, 
 	result = uint8(res)
 
 	return
+}
+
+// RotateRight rotates 8 Bit and the carry bit right
+func RotateRight(accu uint8, carry bool) (uint8, bool) {
+	tmp := uint16(accu)
+	if carry {
+		tmp += 0x100
+	}
+	carry = tmp&0b00000001 == 0b00000001
+	accu = uint8(bits.RotateLeft16(tmp, -1))
+	return accu, carry
+}
+
+// RotateRight rotates 8 Bit and the carry bit right
+func (c *CPU) RotateRight(value uint8) (result uint8) {
+	result, c.ps.carry = RotateRight(value, c.ps.carry)
+	return result
+}
+
+// RotateLeft rotates 8 bit and the carry bit left
+func RotateLeft(accu uint8, carry bool) (uint8, bool) {
+	tmp := uint16(accu) << 1
+	if carry {
+		tmp += 1
+	}
+	carry = tmp&0x100 == 0x100
+	return uint8(tmp), carry
+}
+
+// RotateLeft rotates 8 bit and the carry bit left
+func (c *CPU) RotateLeft(value uint8) (result uint8) {
+	result, c.ps.carry = RotateLeft(value, c.ps.carry)
+	return result
+}
+
+// LogicalShiftRight performs a shift right into the Carry
+func LogicalShiftRight(accu uint8, carry bool) (uint8, bool) {
+	tmp := uint16(accu) << 1
+	if carry {
+		tmp += 1
+	}
+
+	carry = tmp&0x100 == 0x100
+	return uint8(tmp), carry
+}
+
+// LogicalShiftRight performs a shift right into the Carry
+func (c *CPU) LogicalShiftRight(value uint8) (result uint8) {
+	result, c.ps.carry = LogicalShiftRight(value, c.ps.carry)
+	return result
 }
 
 // SubtractWithCarry subtracts two number with carry
