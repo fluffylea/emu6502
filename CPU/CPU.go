@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-const RESET_VECTOR = 0xFFFC
+const ResetVector = 0xFFFC
 
 type CPU struct {
 	// Program Counter
@@ -46,7 +46,7 @@ func NewCPU(addressBus *chan Memory.AddressBus, dataBus *chan Memory.DataBus) *C
 // Reset resets the CPU and gets it ready for execution
 func (c *CPU) Reset() {
 	// Set PC to 0xFFFB so the JMP instruction reads from 0xFFFC and 0xFFFD
-	c.pc = 0xFFFB
+	c.pc = ResetVector - 1
 	c.JMP(AddressMode.Absolut())
 }
 
