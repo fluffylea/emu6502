@@ -266,8 +266,9 @@ func (c *CPU) BPL(mode AddressMode.AddressMode) {
 // BRK break / interrupt
 // TODO: Implement BRK
 func (c *CPU) BRK(mode AddressMode.AddressMode) {
-	log.Printf("ERR: BRK %s is not implemented\n", mode.SelectedMode)
-	panic("Ya YEET")
+	log.Printf("ERR: BRK %s is not properly implemented\n", mode.SelectedMode)
+	c.ps.brk = true
+	c.irq <- true
 }
 
 // BVC branches on overflow clear
