@@ -143,21 +143,48 @@ func (c *CPU) ASL(mode AddressMode.AddressMode) {
 }
 
 // BCC branches on carry clear
-// TODO: Implement BCC
 func (c *CPU) BCC(mode AddressMode.AddressMode) {
-	log.Printf("ERR: BBC %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsRelative(mode):
+		if !c.ps.carry {
+			relativePosition := Uint8ToInt8(c.GetNextByte())
+			c.pc = uint16(int32(c.pc) + 2 + int32(relativePosition))
+		} else {
+			c.pc += 2
+		}
+	default:
+		log.Printf("ERR: BCC %s is not valid\n", mode.SelectedMode)
+	}
 }
 
 // BCS branches on carry set
-// TODO: Implement BCS
 func (c *CPU) BCS(mode AddressMode.AddressMode) {
-	log.Printf("ERR: BCS %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsRelative(mode):
+		if c.ps.carry {
+			relativePosition := Uint8ToInt8(c.GetNextByte())
+			c.pc = uint16(int32(c.pc) + 2 + int32(relativePosition))
+		} else {
+			c.pc += 2
+		}
+	default:
+		log.Printf("ERR: BCS %s is not valid\n", mode.SelectedMode)
+	}
 }
 
 // BEQ branches on equal (zero flag set)
-// TODO: Implement BEQ
 func (c *CPU) BEQ(mode AddressMode.AddressMode) {
-	log.Printf("ERR: BEQ %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsRelative(mode):
+		if c.ps.zero {
+			relativePosition := Uint8ToInt8(c.GetNextByte())
+			c.pc = uint16(int32(c.pc) + 2 + int32(relativePosition))
+		} else {
+			c.pc += 2
+		}
+	default:
+		log.Printf("ERR: BEQ %s is not valid\n", mode.SelectedMode)
+	}
 }
 
 // BIT bit test
@@ -167,39 +194,85 @@ func (c *CPU) BIT(mode AddressMode.AddressMode) {
 }
 
 // BMI branches on minus (negative flag set)
-// TODO: Implement BMI
 func (c *CPU) BMI(mode AddressMode.AddressMode) {
-	log.Printf("ERR: BMI %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsRelative(mode):
+		if c.ps.negative {
+			relativePosition := Uint8ToInt8(c.GetNextByte())
+			c.pc = uint16(int32(c.pc) + 2 + int32(relativePosition))
+		} else {
+			c.pc += 2
+		}
+	default:
+		log.Printf("ERR: BMI %s is not valid\n", mode.SelectedMode)
+	}
 }
 
 // BNE branches on not equal (zero flag clear)
-// TODO: Implement BNE
 func (c *CPU) BNE(mode AddressMode.AddressMode) {
-	log.Printf("ERR: BNE %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsRelative(mode):
+		if !c.ps.zero {
+			relativePosition := Uint8ToInt8(c.GetNextByte())
+			c.pc = uint16(int32(c.pc) + 2 + int32(relativePosition))
+		} else {
+			c.pc += 2
+		}
+	default:
+		log.Printf("ERR: BNE %s is not valid\n", mode.SelectedMode)
+	}
 }
 
 // BPL branches on plus (negative flag clear)
-// TODO: Implement BPL
 func (c *CPU) BPL(mode AddressMode.AddressMode) {
-	log.Printf("ERR: BPL %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsRelative(mode):
+		if !c.ps.negative {
+			relativePosition := Uint8ToInt8(c.GetNextByte())
+			c.pc = uint16(int32(c.pc) + 2 + int32(relativePosition))
+		} else {
+			c.pc += 2
+		}
+	default:
+		log.Printf("ERR: BPL %s is not valid\n", mode.SelectedMode)
+	}
 }
 
 // BRK break / interrupt
 // TODO: Implement BRK
 func (c *CPU) BRK(mode AddressMode.AddressMode) {
 	log.Printf("ERR: BRK %s is not implemented\n", mode.SelectedMode)
+	panic("Ya YEET")
 }
 
 // BVC branches on overflow clear
-// TODO: Implement BVC
 func (c *CPU) BVC(mode AddressMode.AddressMode) {
-	log.Printf("ERR: BVC %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsRelative(mode):
+		if !c.ps.overflow {
+			relativePosition := Uint8ToInt8(c.GetNextByte())
+			c.pc = uint16(int32(c.pc) + 2 + int32(relativePosition))
+		} else {
+			c.pc += 2
+		}
+	default:
+		log.Printf("ERR: BCS %s is not valid\n", mode.SelectedMode)
+	}
 }
 
 // BVS branches on overflow set
-// TODO: Implement BVS
 func (c *CPU) BVS(mode AddressMode.AddressMode) {
-	log.Printf("ERR: BVS %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsRelative(mode):
+		if c.ps.overflow {
+			relativePosition := Uint8ToInt8(c.GetNextByte())
+			c.pc = uint16(int32(c.pc) + 2 + int32(relativePosition))
+		} else {
+			c.pc += 2
+		}
+	default:
+		log.Printf("ERR: BCS %s is not valid\n", mode.SelectedMode)
+	}
 }
 
 // CLC clears the carry flag
