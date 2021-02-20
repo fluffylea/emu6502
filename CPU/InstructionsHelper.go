@@ -166,3 +166,33 @@ func ConvertBitsToUint8(bits [8]bool) (number uint8) {
 	}
 	return number
 }
+
+// PushToStack pushes data onto the stack and decrements the stack pointer
+func (c *CPU) PushToStack(data uint8) {
+	c.SetByteAt(0x100+uint16(c.sp), data)
+	c.sp--
+}
+
+// PullFromStack pulls data from the stack and increments the stack pointer
+func (c *CPU) PullFromStack() (data uint8) {
+	data = c.GetByteAt(0x100 + uint16(c.sp))
+	c.sp++
+	return data
+}
+
+// PushWordToStack pushes an entire word onto the stack
+func (c *CPU) PushWordToStack(data uint16) {
+	dataLow := uint8(data)
+	dataHigh := uint8(data >> 8)
+	c.PushToStack(dataHigh)
+	c.PushToStack(dataLow)
+}
+
+// PullWordFromStack pulls an entire word from the stack
+func (c CPU) PullWordFromStack() (data uint16) {
+	dataLow := uint16(c.PullFromStack())
+	dataHigh := uint16(c.PullFromStack()) << 8
+
+	data = dataLow + dataHigh
+	return data
+}

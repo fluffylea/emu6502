@@ -623,9 +623,14 @@ func (c *CPU) JMP(mode AddressMode.AddressMode) {
 }
 
 // JSR jumps to a subroutine
-// TODO: Implement JSR
 func (c *CPU) JSR(mode AddressMode.AddressMode) {
-	log.Printf("ERR: JSR %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsAbsolut(mode):
+		c.PushWordToStack(c.pc + 2)
+		c.JMP(mode)
+	default:
+		log.Printf("ERR: JSR %s is not valid\n", mode.SelectedMode)
+	}
 }
 
 // LDA loads a value into the accumulator
@@ -974,9 +979,13 @@ func (c *CPU) RTI(mode AddressMode.AddressMode) {
 }
 
 // RTS returns from subroutine
-// TODO: Implement RTS
 func (c *CPU) RTS(mode AddressMode.AddressMode) {
-	log.Printf("ERR: RTS %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsAbsolut(mode):
+		c.pc = c.PullWordFromStack() + 1
+	default:
+		log.Printf("ERR: RTS %s is not valid\n", mode.SelectedMode)
+	}
 }
 
 // SBC subtracts with carry
