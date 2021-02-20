@@ -188,9 +188,34 @@ func (c *CPU) BEQ(mode AddressMode.AddressMode) {
 }
 
 // BIT bit test
-// TODO: Implement BIT
+// Bit 6 of Data goes into Overflow Flag
+// Bit 7 of Data goes into Negative Flag
+// Data and A-Register gets checked for zero
 func (c *CPU) BIT(mode AddressMode.AddressMode) {
-	log.Printf("ERR: BIT %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsZeroPage(mode):
+		address := uint16(c.GetNextByte())
+		data := c.GetByteAt(address)
+		bits := ConvertUint8ToBits(data)
+		c.ps.negative = bits[7]
+		c.ps.overflow = bits[6]
+
+		c.ps.zero = data&c.a == 0
+
+		c.pc += 2
+	case AddressMode.IsAbsolut(mode):
+		address := c.GetNextWord()
+		data := c.GetByteAt(address)
+		bits := ConvertUint8ToBits(data)
+		c.ps.negative = bits[7]
+		c.ps.overflow = bits[6]
+
+		c.ps.zero = data&c.a == 0
+
+		c.pc += 3
+	default:
+		log.Printf("ERR: BIT %s is not valid\n", mode.SelectedMode)
+	}
 }
 
 // BMI branches on minus (negative flag set)
@@ -821,27 +846,47 @@ func (c *CPU) ORA(mode AddressMode.AddressMode) {
 }
 
 // PHA push accumulator to the stack
-// TODO: Implement PHA
 func (c *CPU) PHA(mode AddressMode.AddressMode) {
-	log.Printf("ERR: PHA %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsImplied(mode):
+		c.PushToStack(c.a)
+		c.pc++
+	default:
+		log.Printf("ERR: PHA %s is not valid\n", mode.SelectedMode)
+	}
 }
 
 // PHP pushes the processor status to the stack
-// TODO: Implement PHP
 func (c *CPU) PHP(mode AddressMode.AddressMode) {
-	log.Printf("ERR: PHP %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsImplied(mode):
+		c.PushToStack(c.GetPS())
+		c.pc++
+	default:
+		log.Printf("ERR: PLA %s is not valid\n", mode.SelectedMode)
+	}
 }
 
 // PLA pulls accumulator from the stack
-// TODO: Implement PLA
 func (c *CPU) PLA(mode AddressMode.AddressMode) {
-	log.Printf("ERR: PLA %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsImplied(mode):
+		c.a = c.PullFromStack()
+		c.pc++
+	default:
+		log.Printf("ERR: PLA %s is not valid\n", mode.SelectedMode)
+	}
 }
 
 // PLP pulls the processor status from the stack
-// TODO: Implement PLP
 func (c *CPU) PLP(mode AddressMode.AddressMode) {
-	log.Printf("ERR: PLP %s is not implemented\n", mode.SelectedMode)
+	switch {
+	case AddressMode.IsImplied(mode):
+		c.SetPS(c.PullFromStack())
+		c.pc++
+	default:
+		log.Printf("ERR: PLA %s is not valid\n", mode.SelectedMode)
+	}
 }
 
 // ROL rotates left

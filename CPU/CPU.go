@@ -45,6 +45,8 @@ func NewCPU(addressBus *chan Memory.AddressBus, dataBus *chan Memory.DataBus) *C
 
 // Reset resets the CPU and gets it ready for execution
 func (c *CPU) Reset() {
+	// Stack pointer points to the top of the stack, 0x01FF
+	c.sp = 0xff
 	// Set PC to 0xFFFB so the JMP instruction reads from 0xFFFC and 0xFFFD
 	c.pc = ResetVector - 1
 	c.JMP(AddressMode.Absolut())
@@ -378,6 +380,18 @@ func (c *CPU) GetPS() uint8 {
 	ps[6] = c.ps.zero
 	ps[7] = c.ps.carry
 	return ConvertBitsToUint8(ps)
+}
+
+func (c *CPU) SetPS(newPS uint8) {
+	var ps [8]bool = ConvertUint8ToBits(newPS)
+	c.ps.negative = ps[0]
+	c.ps.overflow = ps[1]
+	// Bit 3 is hardwired to 1.
+	c.ps.brk = ps[3]
+	c.ps.decimal = ps[4]
+	c.ps.intDisable = ps[5]
+	c.ps.zero = ps[6]
+	c.ps.carry = ps[7]
 }
 
 func (c *CPU) ToString() string {
