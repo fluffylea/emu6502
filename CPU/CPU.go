@@ -36,11 +36,14 @@ type CPU struct {
 
 	addressBus *chan Memory.AddressBus
 	dataBus    *chan Memory.DataBus
+
+	nmi chan bool
+	irq chan bool
 }
 
 // NewCPU is the constructor for a new CPU
 func NewCPU(addressBus *chan Memory.AddressBus, dataBus *chan Memory.DataBus) *CPU {
-	return &CPU{addressBus: addressBus, dataBus: dataBus}
+	return &CPU{addressBus: addressBus, dataBus: dataBus, nmi: make(chan bool, 8), irq: make(chan bool, 8)}
 }
 
 // Reset resets the CPU and gets it ready for execution
@@ -54,8 +57,25 @@ func (c *CPU) Reset() {
 
 // Run starts the execution of the CPU
 func (c *CPU) Run() {
+	// Scanner for user input to allow single stepping
 	scanner := bufio.NewScanner(os.Stdin)
+
+	// Main loop
 	for {
+		// Interrupts just lead to halting of execution right now.
+		select {
+		case nmi := <-c.nmi:
+			fmt.Println("Got a NMI! ", nmi)
+			break
+		case irq := <-c.irq:
+			if !c.ps.intDisable {
+				fmt.Println("Got an IRQ! ", irq)
+				break
+			}
+			fmt.Println("Got an IRQ, but ignoring it because IRQs are disabled.")
+		default:
+		}
+		// Normal Execution handling
 		opcode := c.GetByteAt(c.pc)
 		switch opcode {
 		case 0x69:
