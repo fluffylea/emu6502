@@ -160,7 +160,7 @@ func ConvertUint8ToBits(number uint8) (bits [8]bool) {
 func ConvertBitsToUint8(bits [8]bool) (number uint8) {
 	for i := 0; i < 8; i++ {
 		number = number << 1
-		if bits[i] == true {
+		if bits[i] {
 			number += 1
 		}
 	}

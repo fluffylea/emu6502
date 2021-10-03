@@ -1,12 +1,9 @@
 package CPU
 
 import (
-	"bufio"
 	"emu6502/CPU/AddressMode"
 	"emu6502/Memory"
 	"fmt"
-	"log"
-	"os"
 )
 
 const ResetVector = 0xFFFC
@@ -58,19 +55,20 @@ func (c *CPU) Reset() {
 // Run starts the execution of the CPU
 func (c *CPU) Run() {
 	// Scanner for user input to allow single stepping
-	scanner := bufio.NewScanner(os.Stdin)
+	//scanner := bufio.NewScanner(os.Stdin)
 
 	// Main loop
+main:
 	for {
 		// Interrupts just lead to halting of execution right now.
 		select {
 		case nmi := <-c.nmi:
 			fmt.Println("Got a NMI! ", nmi)
-			break
+			break main
 		case irq := <-c.irq:
 			if !c.ps.intDisable {
 				fmt.Println("Got an IRQ! ", irq)
-				break
+				break main
 			}
 			fmt.Println("Got an IRQ, but ignoring it because IRQs are disabled.")
 		default:
@@ -381,11 +379,11 @@ func (c *CPU) Run() {
 		case 0x98:
 			c.TYA(AddressMode.Implied())
 		}
-		log.Print(c.ToString())
+		//log.Print(c.ToString())
 
-		if !scanner.Scan() {
-			break
-		}
+		//if !scanner.Scan() {
+		//break
+		//}
 	}
 }
 
