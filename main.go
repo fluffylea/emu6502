@@ -9,7 +9,7 @@ func main() {
 	var addrBus chan Memory.AddressBus = make(chan Memory.AddressBus)
 	var dataBus chan Memory.DataBus = make(chan Memory.DataBus)
 
-	mem := Memory.NewMemory(&addrBus, &dataBus)
+	mem := Memory.NewMemory(&addrBus, &dataBus, true)
 	mem.Reset()
 	go mem.Run()
 

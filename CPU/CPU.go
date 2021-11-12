@@ -36,11 +36,19 @@ type CPU struct {
 
 	nmi chan bool
 	irq chan bool
+
+	isMainCPU bool
 }
 
 // NewCPU is the constructor for a new CPU
-func NewCPU(addressBus *chan Memory.AddressBus, dataBus *chan Memory.DataBus) *CPU {
-	return &CPU{addressBus: addressBus, dataBus: dataBus, nmi: make(chan bool, 8), irq: make(chan bool, 8)}
+func NewCPU(addressBus *chan Memory.AddressBus, dataBus *chan Memory.DataBus, isMainCPU bool) *CPU {
+	return &CPU{
+		addressBus: addressBus,
+		dataBus: dataBus,
+		nmi: make(chan bool, 8),
+		irq: make(chan bool, 8),
+		isMainCPU: isMainCPU
+	}
 }
 
 // Reset resets the CPU and gets it ready for execution
