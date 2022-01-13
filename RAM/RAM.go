@@ -1,4 +1,4 @@
-package Memory
+package RAM
 
 import (
 	"fmt"
@@ -13,65 +13,25 @@ const vramOffset uint16 = 0x2000
 const ioOffset uint16 = 0x4000
 const romOffset uint16 = 0x4020
 
-type Memory struct {
+type RAM struct {
 	// Actual Memory
 	ram [ramSize]uint8
 	rom [romSize]uint8
 
-	addressBus *chan AddressBus
-	dataBus    *chan DataBus
+	addressBus chan AddressBus
+	dataBus    chan DataBus
 }
 
-// NewMemory is the constructor for a new Memory
-func NewMemory(addressBus *chan AddressBus, dataBus *chan DataBus) *Memory {
-	return &Memory{
+// NewRAM is the constructor for a new Memory
+func NewRAM() *RAM {
+	return &RAM{
 		ram:        [ramSize]uint8{},
 		rom:        [romSize]uint8{},
-		addressBus: addressBus,
-		dataBus:    dataBus}
+		addressBus: make(chan AddressBus),
+		dataBus:    make(chan DataBus)}
 }
 
-// Reset initializes the Memory to 0
-/*func (m *Memory) Reset() {
-	_, err := os.Stat("mem.bin")
-	if os.IsNotExist(err) {
-		var i uint16
-		for i = 0; i < memSize; i++ {
-			switch i {
-			case 0x0600:
-				m.data[i] = 0xCC
-			case 0x0601:
-				m.data[i] = 0xFA
-			case 0xFFFC:
-				m.data[i] = 0x00
-			case 0xFFFD:
-				m.data[i] = 0x06
-			default:
-				m.data[i] = 0
-			}
-		}
-		file, err := os.Create("mem.bin")
-		if err != nil {
-			panic(err.Error())
-		}
-		_, err = file.Write(m.data[:])
-		if err != nil {
-			panic(err.Error())
-		}
-		err = file.Close()
-		if err != nil {
-			panic(err.Error())
-		}
-	} else {
-		bytes, err := os.ReadFile("mem.bin")
-		if err != nil {
-			panic(err.Error())
-		}
-		copy(m.data[:], bytes)
-	}
-}*/
-
-func (m *Memory) Reset() {
+func (m *RAM) Reset() {
 	_, err := os.Stat("rom.bin")
 	if os.IsNotExist(err) {
 		panic("Please add a rom.bin file")
@@ -86,17 +46,17 @@ func (m *Memory) Reset() {
 }
 
 // Run starts with execution of the Memory
-func (m *Memory) Run() {
-	for command := range *m.addressBus {
+func (m *RAM) Run() {
+	for command := range m.addressBus {
 		if command.Rw == 'W' {
-			m.handleMemoryWrite(command.Data, (<-*m.dataBus).Data)
+			m.handleMemoryWrite(command.Data, (<-m.dataBus).Data)
 		} else if command.Rw == 'R' {
-			*m.dataBus <- DataBus{Data: m.handleMemoryRead(command.Data)}
+			m.dataBus <- DataBus{Data: m.handleMemoryRead(command.Data)}
 		}
 	}
 }
 
-func (m *Memory) handleMemoryWrite(location uint16, data uint8) {
+func (m *RAM) handleMemoryWrite(location uint16, data uint8) {
 	switch {
 	case isRAM(location):
 		m.ram[location] = data
@@ -109,7 +69,7 @@ func (m *Memory) handleMemoryWrite(location uint16, data uint8) {
 	}
 }
 
-func (m *Memory) handleMemoryRead(location uint16) uint8 {
+func (m *RAM) handleMemoryRead(location uint16) uint8 {
 	switch {
 	case isRAM(location):
 		return m.ram[location]
@@ -124,7 +84,7 @@ func (m *Memory) handleMemoryRead(location uint16) uint8 {
 	}
 }
 
-func (m *Memory) writeToConsole(char uint8) {
+func (m *RAM) writeToConsole(char uint8) {
 	fmt.Printf("%c", char)
 }
 
