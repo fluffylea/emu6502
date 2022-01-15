@@ -193,7 +193,7 @@ func (c *CPU) BEQ(mode AddressMode.AddressMode) {
 	}
 }
 
-// BIT bit test
+// BIT a bit test
 // Bit 6 of Data goes into Overflow Flag
 // Bit 7 of Data goes into Negative Flag
 // Data and A-Register gets checked for zero

@@ -402,7 +402,7 @@ func (c *CPU) GetPS() uint8 {
 }
 
 func (c *CPU) SetPS(newPS uint8) {
-	var ps [8]bool = ConvertUint8ToBits(newPS)
+	var ps = ConvertUint8ToBits(newPS)
 	c.ps.negative = ps[0]
 	c.ps.overflow = ps[1]
 	// Bit 3 is hardwired to 1.

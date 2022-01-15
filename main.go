@@ -20,11 +20,11 @@ func init() {
 
 	switch strings.ToLower(*loglevel) {
 	case "debug":
-		Logger.ActiveLogLevel = Logger.LOG_LEVEL_DEBUG
+		Logger.ActiveLogLevel = Logger.LogLevelDebug
 	case "info":
-		Logger.ActiveLogLevel = Logger.LOG_LEVEL_INFO
+		Logger.ActiveLogLevel = Logger.LogLevelInfo
 	case "error":
-		Logger.ActiveLogLevel = Logger.LOG_LEVEL_ERROR
+		Logger.ActiveLogLevel = Logger.LogLevelError
 	}
 
 	romFilename = *romFilenamePtr

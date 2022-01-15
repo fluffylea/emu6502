@@ -19,14 +19,14 @@ func SubtractWithCarry(number1 uint8, number2 uint8, carry bool) (result uint8, 
 		c = 1
 	}
 	// Perform the calculation: Sum of the One's complement plus the carry flag
-	var res uint16 = uint16(number1) + uint16(^number2) + c
+	var res = uint16(number1) + uint16(^number2) + c
 
-	// Check if the calculation would land us outside the borders of a 8 Bit signed Int
+	// Check if the calculation would land us outside the borders of an 8-Bit signed Int
 	var resInt = int16(Uint8ToInt8(number1)) + int16(Uint8ToInt8(^number2)) + int16(c)
 	newOverflow = resInt > 127 || resInt < -128
 
 	// Check if the result doesn't fit in one Byte
-	var c7 uint8 = uint8(res >> 8)
+	var c7 = uint8(res >> 8)
 	newCarry = c7 > 0
 
 	// Turn the result into a byte
@@ -118,8 +118,8 @@ func (c *CPU) AddWithCarry(number1 uint8, number2 uint8) (result uint8) {
 
 	// Set the overflow and carry flag
 	// http://www.righto.com/2012/12/the-6502-overflow-flag-explained.html
-	var c6 uint8 = ((number1 & 0b01111111) + (number2 & 0b01111111)) >> 7
-	var c7 uint8 = uint8(addResult >> 8)
+	var c6 = ((number1 & 0b01111111) + (number2 & 0b01111111)) >> 7
+	var c7 = uint8(addResult >> 8)
 	c.ps.overflow = (c6^c7)&0b00000001 == 1
 	c.ps.carry = c7 > 0
 	// Turn the result into a byte again
@@ -156,7 +156,7 @@ func ConvertUint8ToBits(number uint8) (bits [8]bool) {
 	return bits
 }
 
-// ConvertBitsToUint8 converts a boolean array into a uint8 number
+// ConvertBitsToUint8 converts a boolean array into an uint8 number
 func ConvertBitsToUint8(bits [8]bool) (number uint8) {
 	for i := 0; i < 8; i++ {
 		number = number << 1

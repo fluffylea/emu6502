@@ -7,16 +7,16 @@ import (
 )
 
 const (
-	LOG_LEVEL_DEBUG = iota
-	LOG_LEVEL_INFO
-	LOG_LEVEL_WARN
-	LOG_LEVEL_ERROR
+	LogLevelDebug = iota
+	LogLevelInfo
+	LogLevelWarn
+	LogLevelError
 )
 
-var ActiveLogLevel = LOG_LEVEL_INFO
+var ActiveLogLevel = LogLevelInfo
 
 func Debugf(format string, args ...interface{}) {
-	if ActiveLogLevel <= LOG_LEVEL_DEBUG {
+	if ActiveLogLevel <= LogLevelDebug {
 		color.Set(color.FgHiGreen)
 		log.Printf("[DEBUG] "+format+"\n", args...)
 		color.Unset()
@@ -24,7 +24,7 @@ func Debugf(format string, args ...interface{}) {
 }
 
 func Infof(format string, args ...interface{}) {
-	if ActiveLogLevel <= LOG_LEVEL_INFO {
+	if ActiveLogLevel <= LogLevelInfo {
 		color.Set(color.FgHiYellow)
 		log.Printf("[INFO] "+format+"\n", args...)
 		color.Unset()
@@ -32,7 +32,7 @@ func Infof(format string, args ...interface{}) {
 }
 
 func Warnf(format string, args ...interface{}) {
-	if ActiveLogLevel <= LOG_LEVEL_WARN {
+	if ActiveLogLevel <= LogLevelWarn {
 		color.Set(color.FgHiMagenta)
 		log.Printf("[WARN] "+format+"\n", args...)
 		color.Unset()
@@ -40,7 +40,7 @@ func Warnf(format string, args ...interface{}) {
 }
 
 func Errorf(format string, args ...interface{}) {
-	if ActiveLogLevel <= LOG_LEVEL_ERROR {
+	if ActiveLogLevel <= LogLevelError {
 		color.Set(color.FgHiRed)
 		log.Printf("[ERROR] "+format+"\n", args...)
 		color.Unset()
