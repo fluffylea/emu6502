@@ -1,8 +1,9 @@
 package CPU
 
 import (
-	"emu6502/CPU/AddressMode"
-	"emu6502/Memory"
+	"emu6502/ComputeUnit/CPU/AddressMode"
+	"emu6502/ComputeUnit/MMU"
+	"emu6502/Logger"
 	"fmt"
 )
 
@@ -31,16 +32,15 @@ type CPU struct {
 		negative   bool // Negative Flag
 	}
 
-	addressBus *chan Memory.AddressBus
-	dataBus    *chan Memory.DataBus
+	mmu *MMU.MMU
 
 	nmi chan bool
 	irq chan bool
 }
 
 // NewCPU is the constructor for a new CPU
-func NewCPU(addressBus *chan Memory.AddressBus, dataBus *chan Memory.DataBus) *CPU {
-	return &CPU{addressBus: addressBus, dataBus: dataBus, nmi: make(chan bool, 8), irq: make(chan bool, 8)}
+func NewCPU(mmu *MMU.MMU) *CPU {
+	return &CPU{mmu: mmu, nmi: make(chan bool, 8), irq: make(chan bool, 8)}
 }
 
 // Reset resets the CPU and gets it ready for execution
@@ -50,27 +50,30 @@ func (c *CPU) Reset() {
 	// Set PC to 0xFFFB so the JMP instruction reads from 0xFFFC and 0xFFFD
 	c.pc = ResetVector - 1
 	c.JMP(AddressMode.Absolut())
+	Logger.Infof("CPU Reset")
+	Logger.Debugf(c.ToString())
 }
 
 // Run starts the execution of the CPU
 func (c *CPU) Run() {
+	Logger.Infof("CPU Running")
 	// Scanner for user input to allow single stepping
 	//scanner := bufio.NewScanner(os.Stdin)
 
 	// Main loop
-main:
 	for {
-		// Interrupts just lead to halting of execution right now.
+		Logger.Debugf(c.ToString())
+
+		// TODO: Interrupts just lead to halting of execution right now.
+		//       There needs to be a better way than this.
 		select {
 		case nmi := <-c.nmi:
-			fmt.Println("Got a NMI! ", nmi)
-			break main
+			Logger.Fatalf("Got a NMI: %t!", nmi)
 		case irq := <-c.irq:
 			if !c.ps.intDisable {
-				fmt.Println("Got an IRQ! ", irq)
-				break main
+				Logger.Fatalf("Got an IRQ: %t", irq)
 			}
-			fmt.Println("Got an IRQ, but ignoring it because IRQs are disabled.")
+			Logger.Debugf("Got an IRQ, but ignoring it because IRQs are disabled.")
 		default:
 		}
 		// Normal Execution handling
@@ -379,8 +382,6 @@ main:
 		case 0x98:
 			c.TYA(AddressMode.Implied())
 		}
-		//log.Print(c.ToString())
-
 		//if !scanner.Scan() {
 		//break
 		//}

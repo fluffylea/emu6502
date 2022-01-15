@@ -1,12 +1,13 @@
 package CPU
 
 import (
-	"emu6502/CPU/AddressMode"
-	"log"
+	"emu6502/ComputeUnit/CPU/AddressMode"
+	"emu6502/Logger"
 )
 
 // ADC performs an add with carry
 func (c *CPU) ADC(mode AddressMode.AddressMode) {
+	Logger.Debugf("ADC %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImmediate(mode):
 		// ADC #$nn
@@ -49,12 +50,13 @@ func (c *CPU) ADC(mode AddressMode.AddressMode) {
 		c.a = c.AddWithCarry(c.a, c.GetByteAt(addr))
 		c.pc += 2
 	default:
-		log.Printf("ERR: ADC %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("ADC %s is not valid", mode.SelectedMode)
 	}
 }
 
 // AND performs an and with the accumulator
 func (c *CPU) AND(mode AddressMode.AddressMode) {
+	Logger.Debugf("AND %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImmediate(mode):
 		// AND #$nn
@@ -97,7 +99,7 @@ func (c *CPU) AND(mode AddressMode.AddressMode) {
 		c.a = c.GetByteAt(addr) & c.a
 		c.pc += 2
 	default:
-		log.Printf("ERR: AND %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("AND %s is not valid", mode.SelectedMode)
 	}
 	c.CheckNegativeAndSetFlag(c.a)
 	c.CheckZeroAndSetFlag(c.a)
@@ -105,6 +107,7 @@ func (c *CPU) AND(mode AddressMode.AddressMode) {
 
 // ASL performs an arithmetic shift left
 func (c *CPU) ASL(mode AddressMode.AddressMode) {
+	Logger.Debugf("ASL %s", mode.SelectedMode)
 	var tmp uint8 = 0
 	switch {
 	case AddressMode.IsAccumulator(mode):
@@ -136,7 +139,7 @@ func (c *CPU) ASL(mode AddressMode.AddressMode) {
 		c.SetByteAt(parameter, tmp)
 		c.pc += 3
 	default:
-		log.Printf("ERR: ASL %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("ASL %s is not valid", mode.SelectedMode)
 	}
 	c.CheckNegativeAndSetFlag(tmp)
 	c.CheckZeroAndSetFlag(tmp)
@@ -144,6 +147,7 @@ func (c *CPU) ASL(mode AddressMode.AddressMode) {
 
 // BCC branches on carry clear
 func (c *CPU) BCC(mode AddressMode.AddressMode) {
+	Logger.Debugf("BCC %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsRelative(mode):
 		if !c.ps.carry {
@@ -153,12 +157,13 @@ func (c *CPU) BCC(mode AddressMode.AddressMode) {
 			c.pc += 2
 		}
 	default:
-		log.Printf("ERR: BCC %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("BCC %s is not valid", mode.SelectedMode)
 	}
 }
 
 // BCS branches on carry set
 func (c *CPU) BCS(mode AddressMode.AddressMode) {
+	Logger.Debugf("BCS %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsRelative(mode):
 		if c.ps.carry {
@@ -168,12 +173,13 @@ func (c *CPU) BCS(mode AddressMode.AddressMode) {
 			c.pc += 2
 		}
 	default:
-		log.Printf("ERR: BCS %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("BCS %s is not valid", mode.SelectedMode)
 	}
 }
 
 // BEQ branches on equal (zero flag set)
 func (c *CPU) BEQ(mode AddressMode.AddressMode) {
+	Logger.Debugf("BEQ %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsRelative(mode):
 		if c.ps.zero {
@@ -183,7 +189,7 @@ func (c *CPU) BEQ(mode AddressMode.AddressMode) {
 			c.pc += 2
 		}
 	default:
-		log.Printf("ERR: BEQ %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("BEQ %s is not valid", mode.SelectedMode)
 	}
 }
 
@@ -192,6 +198,7 @@ func (c *CPU) BEQ(mode AddressMode.AddressMode) {
 // Bit 7 of Data goes into Negative Flag
 // Data and A-Register gets checked for zero
 func (c *CPU) BIT(mode AddressMode.AddressMode) {
+	Logger.Debugf("BIT %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsZeroPage(mode):
 		address := uint16(c.GetNextByte())
@@ -214,12 +221,13 @@ func (c *CPU) BIT(mode AddressMode.AddressMode) {
 
 		c.pc += 3
 	default:
-		log.Printf("ERR: BIT %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("BIT %s is not valid", mode.SelectedMode)
 	}
 }
 
 // BMI branches on minus (negative flag set)
 func (c *CPU) BMI(mode AddressMode.AddressMode) {
+	Logger.Debugf("BMI %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsRelative(mode):
 		if c.ps.negative {
@@ -229,12 +237,13 @@ func (c *CPU) BMI(mode AddressMode.AddressMode) {
 			c.pc += 2
 		}
 	default:
-		log.Printf("ERR: BMI %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("BMI %s is not valid", mode.SelectedMode)
 	}
 }
 
 // BNE branches on not equal (zero flag clear)
 func (c *CPU) BNE(mode AddressMode.AddressMode) {
+	Logger.Debugf("BNE %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsRelative(mode):
 		if !c.ps.zero {
@@ -244,12 +253,13 @@ func (c *CPU) BNE(mode AddressMode.AddressMode) {
 			c.pc += 2
 		}
 	default:
-		log.Printf("ERR: BNE %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("BNE %s is not valid", mode.SelectedMode)
 	}
 }
 
 // BPL branches on plus (negative flag clear)
 func (c *CPU) BPL(mode AddressMode.AddressMode) {
+	Logger.Debugf("BPL %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsRelative(mode):
 		if !c.ps.negative {
@@ -259,20 +269,24 @@ func (c *CPU) BPL(mode AddressMode.AddressMode) {
 			c.pc += 2
 		}
 	default:
-		log.Printf("ERR: BPL %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("BPL %s is not valid", mode.SelectedMode)
 	}
 }
 
 // BRK break / interrupt
 // TODO: Implement BRK
 func (c *CPU) BRK(mode AddressMode.AddressMode) {
-	log.Printf("ERR: BRK %s is not properly implemented\n", mode.SelectedMode)
+	if !AddressMode.IsImplied(mode) {
+		Logger.Fatalf("Invalid Instruction BRK %s", mode.SelectedMode)
+	}
+	Logger.Errorf("BRK is not properly implemented")
 	c.ps.brk = true
 	c.irq <- true
 }
 
 // BVC branches on overflow clear
 func (c *CPU) BVC(mode AddressMode.AddressMode) {
+	Logger.Debugf("BVC %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsRelative(mode):
 		if !c.ps.overflow {
@@ -282,12 +296,13 @@ func (c *CPU) BVC(mode AddressMode.AddressMode) {
 			c.pc += 2
 		}
 	default:
-		log.Printf("ERR: BCS %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("BCS %s is not valid", mode.SelectedMode)
 	}
 }
 
 // BVS branches on overflow set
 func (c *CPU) BVS(mode AddressMode.AddressMode) {
+	Logger.Debugf("BVS %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsRelative(mode):
 		if c.ps.overflow {
@@ -297,56 +312,61 @@ func (c *CPU) BVS(mode AddressMode.AddressMode) {
 			c.pc += 2
 		}
 	default:
-		log.Printf("ERR: BCS %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("BCS %s is not valid", mode.SelectedMode)
 	}
 }
 
 // CLC clears the carry flag
 func (c *CPU) CLC(mode AddressMode.AddressMode) {
+	Logger.Debugf("CLC %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImplied(mode):
 		c.ps.carry = false
 		c.pc++
 	default:
-		log.Printf("ERR: CLC %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("CLC %s is not valid", mode.SelectedMode)
 	}
 }
 
 // CLD clears the decimal flag
 func (c *CPU) CLD(mode AddressMode.AddressMode) {
+	Logger.Debugf("CLD %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImplied(mode):
 		c.ps.decimal = false
 		c.pc++
 	default:
-		log.Printf("ERR: CLD %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("CLD %s is not valid", mode.SelectedMode)
 	}
 }
 
 // CLI clears interrupt disable
 func (c *CPU) CLI(mode AddressMode.AddressMode) {
+	Logger.Debugf("CLI %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImplied(mode):
 		c.ps.intDisable = false
 		c.pc++
 	default:
-		log.Printf("ERR: CLI %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("CLI %s is not valid", mode.SelectedMode)
 	}
 }
 
 // CLV clears the overflow flag
 func (c *CPU) CLV(mode AddressMode.AddressMode) {
+	Logger.Debugf("CLV %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImplied(mode):
 		c.ps.overflow = false
 		c.pc++
 	default:
-		log.Printf("ERR: CLV %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("CLV %s is not valid", mode.SelectedMode)
 	}
 }
 
 // CMP compares with the accumulator
 func (c *CPU) CMP(mode AddressMode.AddressMode) {
+	Logger.Debugf("CMP %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImmediate(mode):
 		// CMP #$nn
@@ -389,12 +409,13 @@ func (c *CPU) CMP(mode AddressMode.AddressMode) {
 		c.Compare(c.a, c.GetByteAt(addr))
 		c.pc += 2
 	default:
-		log.Printf("ERR: CMP %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("CMP %s is not valid", mode.SelectedMode)
 	}
 }
 
 // CPX compares with X
 func (c *CPU) CPX(mode AddressMode.AddressMode) {
+	Logger.Debugf("CPX %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImmediate(mode):
 		// CPX #$nn
@@ -411,12 +432,13 @@ func (c *CPU) CPX(mode AddressMode.AddressMode) {
 		c.Compare(c.x, c.GetByteAt(parameter))
 		c.pc += 3
 	default:
-		log.Printf("ERR: CPX %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("CPX %s is not valid", mode.SelectedMode)
 	}
 }
 
 // CPY compares with Y
 func (c *CPU) CPY(mode AddressMode.AddressMode) {
+	Logger.Debugf("CPY %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImmediate(mode):
 		// CPY #$nn
@@ -433,12 +455,13 @@ func (c *CPU) CPY(mode AddressMode.AddressMode) {
 		c.Compare(c.y, c.GetByteAt(parameter))
 		c.pc += 3
 	default:
-		log.Printf("ERR: CPY %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("CPY %s is not valid", mode.SelectedMode)
 	}
 }
 
 // DEC decrements memory
 func (c *CPU) DEC(mode AddressMode.AddressMode) {
+	Logger.Debugf("DEC %s", mode.SelectedMode)
 	var tmp uint8
 	switch {
 	case AddressMode.IsZeroPage(mode):
@@ -466,7 +489,7 @@ func (c *CPU) DEC(mode AddressMode.AddressMode) {
 		c.SetByteAt(parameter, tmp)
 		c.pc += 3
 	default:
-		log.Printf("ERR: DEC %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("DEC %s is not valid", mode.SelectedMode)
 	}
 	c.CheckNegativeAndSetFlag(c.a)
 	c.CheckZeroAndSetFlag(c.a)
@@ -474,12 +497,13 @@ func (c *CPU) DEC(mode AddressMode.AddressMode) {
 
 // DEX decrements X
 func (c *CPU) DEX(mode AddressMode.AddressMode) {
+	Logger.Debugf("DEX %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImplied(mode):
 		c.x--
 		c.pc++
 	default:
-		log.Printf("ERR: DEX %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("DEX %s is not valid", mode.SelectedMode)
 	}
 	c.CheckZeroAndSetFlag(c.x)
 	c.CheckNegativeAndSetFlag(c.x)
@@ -487,12 +511,13 @@ func (c *CPU) DEX(mode AddressMode.AddressMode) {
 
 // DEY decrements Y
 func (c *CPU) DEY(mode AddressMode.AddressMode) {
+	Logger.Debugf("DEY %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImplied(mode):
 		c.y--
 		c.pc++
 	default:
-		log.Printf("ERR: DEY %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("DEY %s is not valid", mode.SelectedMode)
 	}
 	c.CheckZeroAndSetFlag(c.y)
 	c.CheckNegativeAndSetFlag(c.y)
@@ -500,6 +525,7 @@ func (c *CPU) DEY(mode AddressMode.AddressMode) {
 
 // EOR performs an exclusive or with the accumulator
 func (c *CPU) EOR(mode AddressMode.AddressMode) {
+	Logger.Debugf("EOR %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImmediate(mode):
 		// EOR #$nn
@@ -542,7 +568,7 @@ func (c *CPU) EOR(mode AddressMode.AddressMode) {
 		c.a = c.GetByteAt(addr) ^ c.a
 		c.pc += 2
 	default:
-		log.Printf("ERR: EOR %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("EOR %s is not valid", mode.SelectedMode)
 	}
 	c.CheckNegativeAndSetFlag(c.a)
 	c.CheckZeroAndSetFlag(c.a)
@@ -550,6 +576,7 @@ func (c *CPU) EOR(mode AddressMode.AddressMode) {
 
 // INC increments memory
 func (c *CPU) INC(mode AddressMode.AddressMode) {
+	Logger.Debugf("INC %s", mode.SelectedMode)
 	var tmp uint8
 	switch {
 	case AddressMode.IsZeroPage(mode):
@@ -577,7 +604,7 @@ func (c *CPU) INC(mode AddressMode.AddressMode) {
 		c.SetByteAt(parameter, tmp)
 		c.pc += 3
 	default:
-		log.Printf("ERR: INC %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("INC %s is not valid", mode.SelectedMode)
 	}
 	c.CheckNegativeAndSetFlag(c.a)
 	c.CheckZeroAndSetFlag(c.a)
@@ -585,12 +612,13 @@ func (c *CPU) INC(mode AddressMode.AddressMode) {
 
 // INX increments X
 func (c *CPU) INX(mode AddressMode.AddressMode) {
+	Logger.Debugf("INX %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImplied(mode):
 		c.x++
 		c.pc++
 	default:
-		log.Printf("ERR: INX %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("INX %s is not valid", mode.SelectedMode)
 	}
 	c.CheckZeroAndSetFlag(c.x)
 	c.CheckNegativeAndSetFlag(c.x)
@@ -598,12 +626,13 @@ func (c *CPU) INX(mode AddressMode.AddressMode) {
 
 // INY increments Y
 func (c *CPU) INY(mode AddressMode.AddressMode) {
+	Logger.Debugf("INY %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImplied(mode):
 		c.y++
 		c.pc++
 	default:
-		log.Printf("ERR: INY %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("INY %s is not valid", mode.SelectedMode)
 	}
 	c.CheckZeroAndSetFlag(c.y)
 	c.CheckNegativeAndSetFlag(c.y)
@@ -612,6 +641,7 @@ func (c *CPU) INY(mode AddressMode.AddressMode) {
 // JMP sets the program counter to the new value to continue
 // processing somewhere else
 func (c *CPU) JMP(mode AddressMode.AddressMode) {
+	Logger.Debugf("JMP %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsAbsolut(mode):
 		c.pc = c.GetNextWord()
@@ -619,23 +649,25 @@ func (c *CPU) JMP(mode AddressMode.AddressMode) {
 		addr := c.GetNextWord()
 		c.pc = c.GetWordAt(addr)
 	default:
-		log.Printf("ERR: JMP %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("JMP %s is not valid", mode.SelectedMode)
 	}
 }
 
 // JSR jumps to a subroutine
 func (c *CPU) JSR(mode AddressMode.AddressMode) {
+	Logger.Debugf("JSR %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsAbsolut(mode):
 		c.PushWordToStack(c.pc + 2)
 		c.JMP(mode)
 	default:
-		log.Printf("ERR: JSR %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("JSR %s is not valid", mode.SelectedMode)
 	}
 }
 
 // LDA loads a value into the accumulator
 func (c *CPU) LDA(mode AddressMode.AddressMode) {
+	Logger.Debugf("LDA %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImmediate(mode):
 		// LDA #$nn
@@ -678,7 +710,7 @@ func (c *CPU) LDA(mode AddressMode.AddressMode) {
 		c.a = c.GetByteAt(addr)
 		c.pc += 2
 	default:
-		log.Printf("ERR: LDA %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("LDA %s is not valid", mode.SelectedMode)
 	}
 	c.CheckZeroAndSetFlag(c.a)
 	c.CheckNegativeAndSetFlag(c.a)
@@ -686,6 +718,7 @@ func (c *CPU) LDA(mode AddressMode.AddressMode) {
 
 // LDX loads a value into X
 func (c *CPU) LDX(mode AddressMode.AddressMode) {
+	Logger.Debugf("LDX %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImmediate(mode):
 		// LDX #$nn
@@ -712,7 +745,7 @@ func (c *CPU) LDX(mode AddressMode.AddressMode) {
 		c.x = c.GetByteAt(parameter)
 		c.pc += 3
 	default:
-		log.Printf("ERR: LDX %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("LDX %s is not valid", mode.SelectedMode)
 	}
 	c.CheckZeroAndSetFlag(c.x)
 	c.CheckNegativeAndSetFlag(c.x)
@@ -720,6 +753,7 @@ func (c *CPU) LDX(mode AddressMode.AddressMode) {
 
 // LDY loads a value into Y
 func (c *CPU) LDY(mode AddressMode.AddressMode) {
+	Logger.Debugf("LDY %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImmediate(mode):
 		// LDY #$nn
@@ -746,7 +780,7 @@ func (c *CPU) LDY(mode AddressMode.AddressMode) {
 		c.y = c.GetByteAt(parameter)
 		c.pc += 3
 	default:
-		log.Printf("ERR: LDY %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("LDY %s is not valid", mode.SelectedMode)
 	}
 	c.CheckZeroAndSetFlag(c.y)
 	c.CheckNegativeAndSetFlag(c.y)
@@ -754,6 +788,7 @@ func (c *CPU) LDY(mode AddressMode.AddressMode) {
 
 // LSR performs a logical shift right
 func (c *CPU) LSR(mode AddressMode.AddressMode) {
+	Logger.Debugf("LSR %s", mode.SelectedMode)
 	var tmp uint8 = 0
 	switch {
 	case AddressMode.IsAccumulator(mode):
@@ -785,7 +820,7 @@ func (c *CPU) LSR(mode AddressMode.AddressMode) {
 		c.SetByteAt(parameter, tmp)
 		c.pc += 3
 	default:
-		log.Printf("ERR: LSR %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("LSR %s is not valid", mode.SelectedMode)
 	}
 	c.CheckNegativeAndSetFlag(tmp)
 	c.CheckZeroAndSetFlag(tmp)
@@ -793,16 +828,18 @@ func (c *CPU) LSR(mode AddressMode.AddressMode) {
 
 // NOP does nothing
 func (c *CPU) NOP(mode AddressMode.AddressMode) {
+	Logger.Debugf("NOP %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImplied(mode):
 		c.pc++
 	default:
-		log.Printf("ERR: NOP %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("NOP %s is not valid", mode.SelectedMode)
 	}
 }
 
 // ORA ors with the accumulator
 func (c *CPU) ORA(mode AddressMode.AddressMode) {
+	Logger.Debugf("ORA %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImmediate(mode):
 		// ORA #$nn
@@ -845,7 +882,7 @@ func (c *CPU) ORA(mode AddressMode.AddressMode) {
 		c.a = c.GetByteAt(addr) | c.a
 		c.pc += 2
 	default:
-		log.Printf("ERR: ORA %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("ORA %s is not valid", mode.SelectedMode)
 	}
 	c.CheckNegativeAndSetFlag(c.a)
 	c.CheckZeroAndSetFlag(c.a)
@@ -853,50 +890,55 @@ func (c *CPU) ORA(mode AddressMode.AddressMode) {
 
 // PHA push accumulator to the stack
 func (c *CPU) PHA(mode AddressMode.AddressMode) {
+	Logger.Debugf("PHA %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImplied(mode):
 		c.PushToStack(c.a)
 		c.pc++
 	default:
-		log.Printf("ERR: PHA %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("PHA %s is not valid", mode.SelectedMode)
 	}
 }
 
 // PHP pushes the processor status to the stack
 func (c *CPU) PHP(mode AddressMode.AddressMode) {
+	Logger.Debugf("PHP %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImplied(mode):
 		c.PushToStack(c.GetPS())
 		c.pc++
 	default:
-		log.Printf("ERR: PLA %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("PLA %s is not valid", mode.SelectedMode)
 	}
 }
 
 // PLA pulls accumulator from the stack
 func (c *CPU) PLA(mode AddressMode.AddressMode) {
+	Logger.Debugf("PLA %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImplied(mode):
 		c.a = c.PullFromStack()
 		c.pc++
 	default:
-		log.Printf("ERR: PLA %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("PLA %s is not valid", mode.SelectedMode)
 	}
 }
 
 // PLP pulls the processor status from the stack
 func (c *CPU) PLP(mode AddressMode.AddressMode) {
+	Logger.Debugf("PLP %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImplied(mode):
 		c.SetPS(c.PullFromStack())
 		c.pc++
 	default:
-		log.Printf("ERR: PLA %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("PLA %s is not valid", mode.SelectedMode)
 	}
 }
 
 // ROL rotates left
 func (c *CPU) ROL(mode AddressMode.AddressMode) {
+	Logger.Debugf("ROL %s", mode.SelectedMode)
 	var tmp uint8 = 0
 	switch {
 	case AddressMode.IsAccumulator(mode):
@@ -928,7 +970,7 @@ func (c *CPU) ROL(mode AddressMode.AddressMode) {
 		c.SetByteAt(parameter, tmp)
 		c.pc += 3
 	default:
-		log.Printf("ERR: ROL %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("ROL %s is not valid", mode.SelectedMode)
 	}
 	c.CheckNegativeAndSetFlag(tmp)
 	c.CheckZeroAndSetFlag(tmp)
@@ -936,6 +978,7 @@ func (c *CPU) ROL(mode AddressMode.AddressMode) {
 
 // ROR rotates right
 func (c *CPU) ROR(mode AddressMode.AddressMode) {
+	Logger.Debugf("ROR %s", mode.SelectedMode)
 	var tmp uint8 = 0
 	switch {
 	case AddressMode.IsAccumulator(mode):
@@ -967,7 +1010,7 @@ func (c *CPU) ROR(mode AddressMode.AddressMode) {
 		c.SetByteAt(parameter, tmp)
 		c.pc += 3
 	default:
-		log.Printf("ERR: ROR %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("ROR %s is not valid", mode.SelectedMode)
 	}
 	c.CheckNegativeAndSetFlag(tmp)
 	c.CheckZeroAndSetFlag(tmp)
@@ -976,21 +1019,23 @@ func (c *CPU) ROR(mode AddressMode.AddressMode) {
 // RTI returns from interrupt
 // TODO: Implement RTI
 func (c *CPU) RTI(mode AddressMode.AddressMode) {
-	log.Printf("ERR: RTI %s is not implemented\n", mode.SelectedMode)
+	Logger.Errorf("RTI %s is not implemented", mode.SelectedMode)
 }
 
 // RTS returns from subroutine
 func (c *CPU) RTS(mode AddressMode.AddressMode) {
+	Logger.Debugf("RTS %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsAbsolut(mode):
 		c.pc = c.PullWordFromStack() + 1
 	default:
-		log.Printf("ERR: RTS %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("RTS %s is not valid", mode.SelectedMode)
 	}
 }
 
 // SBC subtracts with carry
 func (c *CPU) SBC(mode AddressMode.AddressMode) {
+	Logger.Debugf("SBC %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImmediate(mode):
 		// SBC #$nn
@@ -1033,46 +1078,50 @@ func (c *CPU) SBC(mode AddressMode.AddressMode) {
 		c.a = c.SubtractWithCarry(c.a, c.GetByteAt(addr))
 		c.pc += 2
 	default:
-		log.Printf("ERR: SBC %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("SBC %s is not valid", mode.SelectedMode)
 	}
 }
 
 // SEC sets the carry flag
 func (c *CPU) SEC(mode AddressMode.AddressMode) {
+	Logger.Debugf("SEC %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImplied(mode):
 		c.ps.carry = true
 		c.pc++
 	default:
-		log.Printf("ERR: SEC %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("SEC %s is not valid", mode.SelectedMode)
 	}
 }
 
 // SED sets the decimal flag
 func (c *CPU) SED(mode AddressMode.AddressMode) {
+	Logger.Debugf("SED %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImplied(mode):
 		c.ps.decimal = true
 		c.pc++
-		log.Println("Just remember... BCD Mode doesn't work")
+		Logger.Warnf("Just remember... BCD Mode doesn't work")
 	default:
-		log.Printf("ERR: SED %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("SED %s is not valid", mode.SelectedMode)
 	}
 }
 
 // SEI sets the interrupt disable flag
 func (c *CPU) SEI(mode AddressMode.AddressMode) {
+	Logger.Debugf("SEI %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImplied(mode):
 		c.ps.intDisable = true
 		c.pc++
 	default:
-		log.Printf("ERR: SEI %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("SEI %s is not valid", mode.SelectedMode)
 	}
 }
 
 // STA stores the accumulator in memory
 func (c *CPU) STA(mode AddressMode.AddressMode) {
+	Logger.Debugf("STA %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsZeroPage(mode):
 		// STA $ll
@@ -1111,12 +1160,13 @@ func (c *CPU) STA(mode AddressMode.AddressMode) {
 		c.SetByteAt(addr, c.a)
 		c.pc += 2
 	default:
-		log.Printf("ERR: STA %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("STA %s is not valid", mode.SelectedMode)
 	}
 }
 
 // STX stores X in memory
 func (c *CPU) STX(mode AddressMode.AddressMode) {
+	Logger.Debugf("STX %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsZeroPage(mode):
 		// STX $ll
@@ -1134,12 +1184,13 @@ func (c *CPU) STX(mode AddressMode.AddressMode) {
 		c.SetByteAt(addr, c.x)
 		c.pc += 3
 	default:
-		log.Printf("ERR: STX %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("STX %s is not valid", mode.SelectedMode)
 	}
 }
 
 // STY stores Y in memory
 func (c *CPU) STY(mode AddressMode.AddressMode) {
+	Logger.Debugf("STY %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsZeroPage(mode):
 		// STY $ll
@@ -1157,18 +1208,19 @@ func (c *CPU) STY(mode AddressMode.AddressMode) {
 		c.SetByteAt(addr, c.y)
 		c.pc += 3
 	default:
-		log.Printf("ERR: STY %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("STY %s is not valid", mode.SelectedMode)
 	}
 }
 
 // TAX transfers the accumulator to X
 func (c *CPU) TAX(mode AddressMode.AddressMode) {
+	Logger.Debugf("TAX %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImplied(mode):
 		c.x = c.a
 		c.pc++
 	default:
-		log.Printf("ERR: TAX %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("TAX %s is not valid", mode.SelectedMode)
 	}
 	c.CheckZeroAndSetFlag(c.x)
 	c.CheckNegativeAndSetFlag(c.x)
@@ -1176,12 +1228,13 @@ func (c *CPU) TAX(mode AddressMode.AddressMode) {
 
 // TAY transfers the accumulator to Y
 func (c *CPU) TAY(mode AddressMode.AddressMode) {
+	Logger.Debugf("TAY %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImplied(mode):
 		c.y = c.a
 		c.pc++
 	default:
-		log.Printf("ERR: TAY %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("TAY %s is not valid", mode.SelectedMode)
 	}
 	c.CheckZeroAndSetFlag(c.y)
 	c.CheckNegativeAndSetFlag(c.y)
@@ -1189,12 +1242,13 @@ func (c *CPU) TAY(mode AddressMode.AddressMode) {
 
 // TSX transfers the stack pointer to X
 func (c *CPU) TSX(mode AddressMode.AddressMode) {
+	Logger.Debugf("TSX %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImplied(mode):
 		c.x = c.sp
 		c.pc++
 	default:
-		log.Printf("ERR: TSX %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("TSX %s is not valid", mode.SelectedMode)
 	}
 	c.CheckZeroAndSetFlag(c.x)
 	c.CheckNegativeAndSetFlag(c.x)
@@ -1202,12 +1256,13 @@ func (c *CPU) TSX(mode AddressMode.AddressMode) {
 
 // TXA transfers X to the accumulator
 func (c *CPU) TXA(mode AddressMode.AddressMode) {
+	Logger.Debugf("TXA %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImplied(mode):
 		c.a = c.x
 		c.pc++
 	default:
-		log.Printf("ERR: TXA %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("TXA %s is not valid", mode.SelectedMode)
 	}
 	c.CheckZeroAndSetFlag(c.a)
 	c.CheckNegativeAndSetFlag(c.a)
@@ -1215,23 +1270,25 @@ func (c *CPU) TXA(mode AddressMode.AddressMode) {
 
 // TXS transfers X to the stack pointer
 func (c *CPU) TXS(mode AddressMode.AddressMode) {
+	Logger.Debugf("TXS %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImplied(mode):
 		c.sp = c.x
 		c.pc++
 	default:
-		log.Printf("ERR: TXS %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("TXS %s is not valid", mode.SelectedMode)
 	}
 }
 
 // TYA transfers Y to the accumulator
 func (c *CPU) TYA(mode AddressMode.AddressMode) {
+	Logger.Debugf("TYA %s", mode.SelectedMode)
 	switch {
 	case AddressMode.IsImplied(mode):
 		c.a = c.y
 		c.pc++
 	default:
-		log.Printf("ERR: TXA %s is not valid\n", mode.SelectedMode)
+		Logger.Fatalf("TXA %s is not valid", mode.SelectedMode)
 	}
 	c.CheckZeroAndSetFlag(c.a)
 	c.CheckNegativeAndSetFlag(c.a)
