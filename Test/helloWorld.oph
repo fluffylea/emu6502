@@ -1,0 +1,27 @@
+; Hello World, written in OPHIS 6502 Assembly
+
+; Start of ROM
+.org $4020
+.outfile "../hello.rom"
+
+    ldx #0
+loop:
+    inx
+    txa
+    cmp #$F
+    bne loop
+
+end:
+    brk
+
+; NMI Vector
+.advance $FFFA
+.word end
+
+; RESET Vector
+.advance $FFFC
+.word $4020
+
+; IRQ Vector
+.advance $FFFE
+.word end
