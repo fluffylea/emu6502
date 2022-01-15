@@ -2,6 +2,7 @@ package MMU
 
 import (
 	"emu6502/ComputeUnit/PrivRAM"
+	"emu6502/GPU"
 	"emu6502/Logger"
 	"emu6502/RAM"
 	"emu6502/ROM"
@@ -11,6 +12,7 @@ import (
 const (
 	RamId = iota
 	PrivramId
+	GpuId
 	RomId
 )
 
@@ -34,7 +36,7 @@ func DefaultMappings() []*Mapping {
 	return []*Mapping{
 		NewMapping(0x0000, 0x0000, 0x2000, PrivramId),
 		NewMapping(0x2000, 0x0000, 0x2000, RamId),
-		NewMapping(0x4000, 0x2000, 0x0020, RamId),
+		NewMapping(0x4000, 0x0000, 0x0020, GpuId),
 		NewMapping(0x4020, 0x0000, 0xBFDF, RomId),
 	}
 }
@@ -57,11 +59,13 @@ type MMU struct {
 	ramDataBus    *chan RAM.DataBus
 	romAddressBus *chan ROM.AddressBus
 	romDataBus    *chan ROM.DataBus
+	gpuAddressBus *chan GPU.AddressBus
+	gpuDataBus    *chan GPU.DataBus
 
 	mappings []*Mapping
 }
 
-func NewMMU(mappings []*Mapping, ram *RAM.RAM, rom *ROM.ROM) *MMU {
+func NewMMU(mappings []*Mapping, ram *RAM.RAM, rom *ROM.ROM, gpu *GPU.GPU) *MMU {
 	if mappings == nil {
 		mappings = DefaultMappings()
 	}
@@ -86,6 +90,9 @@ func NewMMU(mappings []*Mapping, ram *RAM.RAM, rom *ROM.ROM) *MMU {
 
 		romAddressBus: &rom.AddressBus,
 		romDataBus:    &rom.DataBus,
+
+		gpuAddressBus: &gpu.AddressBus,
+		gpuDataBus:    &gpu.DataBus,
 
 		mappings: mappings,
 	}
@@ -112,6 +119,14 @@ func (m *MMU) GetByteAt(address uint16) uint8 {
 				result := (<-*m.romDataBus).Data
 				Logger.Debugf("Read ROM[%04x:%04x] = %02x", address, physicalAddress, result)
 				return result
+			case GpuId:
+				physicalAddress := m.convertVirtualAddressIntoPhysicalAddress(address)
+				*m.gpuAddressBus <- GPU.AddressBus{Rw: 'R', Data: physicalAddress}
+				result := (<-*m.gpuDataBus).Data
+				Logger.Debugf("Read GPU[%04x:%04x] = %02x", address, physicalAddress, result)
+				return result
+			default:
+				Logger.Fatalf("Unknown backing store: %d", mapping.backingStore)
 			}
 		}
 	}
@@ -133,11 +148,20 @@ func (m *MMU) SetByteAt(address uint16, data uint8) {
 			switch mapping.backingStore {
 			case PrivramId:
 				m.privRAM.Write(address, data)
+				return
 			case RamId:
 				*m.ramAddressBus <- RAM.AddressBus{Rw: 'W', Data: m.convertVirtualAddressIntoPhysicalAddress(address)}
 				*m.ramDataBus <- RAM.DataBus{Data: data}
+				return
 			case RomId:
 				Logger.Errorf("Cannot write to ROM")
+				return
+			case GpuId:
+				*m.gpuAddressBus <- GPU.AddressBus{Rw: 'W', Data: m.convertVirtualAddressIntoPhysicalAddress(address)}
+				*m.gpuDataBus <- GPU.DataBus{Data: data}
+				return
+			default:
+				Logger.Fatalf("Unknown backing store: %d", mapping.backingStore)
 			}
 		}
 	}

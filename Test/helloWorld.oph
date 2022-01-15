@@ -3,16 +3,26 @@
 ; Start of ROM
 .org $4020
 .outfile "../hello.rom"
+.include "stdlib.oph"
 
-    ldx #0
+start:
+    .invoke print hello
+
+    ldx #64
 loop:
     inx
     txa
-    cmp #$F
+    .invoke printChar
+    cmp #90
     bne loop
 
+    lda #10
+    .invoke printChar
 end:
     brk
+
+hello: .byte "Hello World!", 10, 0
+
 
 ; NMI Vector
 .advance $FFFA
@@ -20,7 +30,7 @@ end:
 
 ; RESET Vector
 .advance $FFFC
-.word $4020
+.word start
 
 ; IRQ Vector
 .advance $FFFE
