@@ -6,13 +6,15 @@
 .macend
 
 ; print prints a string given as argument to the screen
-.macro print
+print:
+.scope
     ldx #0
 _loop:
-    lda _1, x
+    lda hello, x
     beq _done
     .invoke printChar
     inx
     bne _loop
 _done:
-.macend
+    rts
+.scend

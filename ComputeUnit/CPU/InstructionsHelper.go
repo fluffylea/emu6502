@@ -175,8 +175,8 @@ func (c *CPU) PushToStack(data uint8) {
 
 // PullFromStack pulls data from the stack and increments the stack pointer
 func (c *CPU) PullFromStack() (data uint8) {
-	data = c.GetByteAt(0x100 + uint16(c.sp))
 	c.sp++
+	data = c.GetByteAt(0x100 + uint16(c.sp))
 	return data
 }
 

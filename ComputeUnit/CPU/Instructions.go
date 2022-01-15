@@ -1026,7 +1026,7 @@ func (c *CPU) RTI(mode AddressMode.AddressMode) {
 func (c *CPU) RTS(mode AddressMode.AddressMode) {
 	Logger.Debugf("RTS %s", mode.SelectedMode)
 	switch {
-	case AddressMode.IsAbsolut(mode):
+	case AddressMode.IsImplied(mode):
 		c.pc = c.PullWordFromStack() + 1
 	default:
 		Logger.Fatalf("RTS %s is not valid", mode.SelectedMode)

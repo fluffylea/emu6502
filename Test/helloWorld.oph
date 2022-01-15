@@ -6,7 +6,7 @@
 .include "stdlib.oph"
 
 start:
-    .invoke print hello
+    jsr print
 
     ldx #64
 loop:
