@@ -1,0 +1,18 @@
+.alias chrout $4000
+
+; printChar prints a character stored in accumulator to the screen
+.macro printChar
+    sta chrout
+.macend
+
+; print prints a string given as argument to the screen
+.macro print
+    ldx #0
+_loop:
+    lda _1, x
+    beq _done
+    .invoke printChar
+    inx
+    bne _loop
+_done:
+.macend

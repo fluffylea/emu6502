@@ -2,3 +2,4 @@ emu6502
 emu6502.exe
 .idea
 .vscode
+*.l
