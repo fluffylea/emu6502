@@ -13,8 +13,8 @@ import (
 var romFilename string
 
 func init() {
-	loglevel := flag.String("loglevel", "info", "Debug mode")
-	romFilenamePtr := flag.String("rom", "rom.bin", "Path to the ROM file")
+	loglevel := flag.String("loglevel", "debug", "Debug mode")
+	romFilenamePtr := flag.String("rom", "hello.rom", "Path to the ROM file")
 
 	flag.Parse()
 
