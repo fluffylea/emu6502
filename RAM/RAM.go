@@ -1,105 +1,50 @@
 package RAM
 
-import (
-	"fmt"
-	"os"
-)
+import "emu6502/Logger"
 
-const ramSize uint16 = 0x2000
-const romSize uint16 = 0xBFE0
-
-const ramOffset uint16 = 0x0000
-const vramOffset uint16 = 0x2000
-const ioOffset uint16 = 0x4000
-const romOffset uint16 = 0x4020
+const ramSize uint32 = 0xFFFF
 
 type RAM struct {
 	// Actual Memory
 	ram [ramSize]uint8
-	rom [romSize]uint8
 
-	addressBus chan AddressBus
-	dataBus    chan DataBus
+	AddressBus chan AddressBus
+	DataBus    chan DataBus
 }
 
 // NewRAM is the constructor for a new Memory
 func NewRAM() *RAM {
 	return &RAM{
 		ram:        [ramSize]uint8{},
-		rom:        [romSize]uint8{},
-		addressBus: make(chan AddressBus),
-		dataBus:    make(chan DataBus)}
+		AddressBus: make(chan AddressBus),
+		DataBus:    make(chan DataBus)}
 }
 
+// Reset resets the Memory to its initial state
 func (m *RAM) Reset() {
-	_, err := os.Stat("rom.bin")
-	if os.IsNotExist(err) {
-		panic("Please add a rom.bin file")
+	Logger.Infof("RAM Reset")
+	for i := range m.ram {
+		m.ram[i] = 0
 	}
-
-	bytes, err := os.ReadFile("rom.bin")
-	if err != nil {
-		panic("Cannot read rom.bin")
-	}
-
-	copy(m.rom[:], bytes)
 }
 
 // Run starts with execution of the Memory
 func (m *RAM) Run() {
-	for command := range m.addressBus {
+	Logger.Infof("RAM Run")
+
+	for command := range m.AddressBus {
 		if command.Rw == 'W' {
-			m.handleMemoryWrite(command.Data, (<-m.dataBus).Data)
+			m.handleMemoryWrite(command.Data, (<-m.DataBus).Data)
 		} else if command.Rw == 'R' {
-			m.dataBus <- DataBus{Data: m.handleMemoryRead(command.Data)}
+			m.DataBus <- DataBus{Data: m.handleMemoryRead(command.Data)}
 		}
 	}
 }
 
-func (m *RAM) handleMemoryWrite(location uint16, data uint8) {
-	switch {
-	case isRAM(location):
-		m.ram[location] = data
-	case isVRAM(location):
-		m.writeToConsole(data)
-	case isIO(location):
-		//These writes are ignored
-	case isROM(location):
-		m.rom[location-romOffset] = data
-	}
+func (m *RAM) handleMemoryWrite(location uint32, data uint8) {
+	m.ram[location] = data
 }
 
-func (m *RAM) handleMemoryRead(location uint16) uint8 {
-	switch {
-	case isRAM(location):
-		return m.ram[location]
-	case isVRAM(location):
-		return 0
-	case isIO(location):
-		return 0
-	case isROM(location):
-		return m.rom[location-romOffset]
-	default:
-		return 0
-	}
-}
-
-func (m *RAM) writeToConsole(char uint8) {
-	fmt.Printf("%c", char)
-}
-
-func isRAM(location uint16) bool {
-	return location >= ramOffset && location < vramOffset
-}
-
-func isVRAM(location uint16) bool {
-	return location >= vramOffset && location < ioOffset
-}
-
-func isIO(location uint16) bool {
-	return location >= ioOffset && location < romOffset
-}
-
-func isROM(location uint16) bool {
-	return location >= romOffset
+func (m *RAM) handleMemoryRead(location uint32) uint8 {
+	return m.ram[location]
 }
