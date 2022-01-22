@@ -164,9 +164,10 @@ func (m *MMU) SetByteAt(address uint16, data uint8) {
 			case PrivramId:
 				m.privRAM.Write(address, data)
 				return
-			case RamId:
-				fallthrough
 			case RomId:
+				Logger.Errorf("Attempt to write to ROM: 0x%04X", address)
+				return
+			case RamId:
 				fallthrough
 			case GpuId:
 				physicalAddress := m.convertVirtualAddressIntoPhysicalAddress(address)

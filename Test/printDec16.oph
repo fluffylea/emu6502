@@ -5,14 +5,13 @@
 
 number1: .word 16
 number2: .word 420
-result: .word 0
+.alias result $0300
 
 start:
     .invoke add16 number1, number2, result
 
     lda number1
     ldx number1 + 1
-    brk
     jsr printDec16
 
     lda #43 ; +

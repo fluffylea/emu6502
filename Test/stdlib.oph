@@ -1,4 +1,7 @@
 .alias chrout $4000
+.alias printDec16_num1 $0200
+.alias printDec16_num2 $0201
+.alias printDec16_pad $0202
 
 ; printChar prints a character stored in accumulator to the screen
 .macro printChar
@@ -46,12 +49,13 @@ _done:
     sta _3
     lda _1 + 1
     adc _2 + 1
-sta _3 + 1
+    sta _3 + 1
+    ; put return values in the accumulator and X
+    lda _3
+    ldx _3 + 1
 .macend
 
-; On entry, A=value to print
-; On exit,  A corrupted
-
+; printDec8 prints a 8-bit decimal number stored in the accumulator
 .scope
 printDec8:
     ldx #$FF
@@ -82,40 +86,42 @@ _PrDecDigit:
     rts              ; Restore A and return
 .scend
 
+; printDec16 prints a 16-bit decimal number stored in the accumulator and X
+; The padding is stored in Y
 .scope
-_num: .word 0
-_pad: .byte '0
 printDec16:
-    sta _num
-    stx _num + 1
+    sta printDec16_num1
+    stx printDec16_num2
+    ldy #'0
+    sty printDec16_pad
 _PrDec16:
     ldy #8                      ; Offset to powers of ten
 _PrDec16Lp1:
     ldx #$FF
     sec                         ; Start with digit=-1
 _PrDec16Lp2:
-    lda _num+0
+    lda printDec16_num1
     sbc _PrDec16Tens+0,Y
-    sta _num+0                   ; Subtract current tens
-    lda _num+1
+    sta printDec16_num1         ; Subtract current tens
+    lda printDec16_num2
     sbc _PrDec16Tens+1,Y
-    sta _num+1
+    sta printDec16_num2
     inx
     bcs _PrDec16Lp2             ; Loop until <0
-    lda _num+0
+    lda printDec16_num1
     adc _PrDec16Tens+0,Y
-    sta _num+0                   ; Add current tens back in
-    lda _num+1
+    sta printDec16_num1         ; Add current tens back in
+    lda printDec16_num2
     adc _PrDec16Tens+1,Y
-    sta _num+1
+    sta printDec16_num2
     txa
     bne _PrDec16Digit           ; Not zero, print it
-    lda _pad
+    lda printDec16_pad
     bne _PrDec16Print
     beq _PrDec16Next            ; pad<>0, use it
 _PrDec16Digit:
     ldx #'0
-    stx _pad                     ; No more zero padding
+    stx printDec16_pad          ; No more zero padding
     ora #'0                     ; Print this digit
 _PrDec16Print:
     .invoke printChar
