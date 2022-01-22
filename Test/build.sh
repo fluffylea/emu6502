@@ -16,6 +16,10 @@ function clean() {
 }
 
 function compile() {
+  pushd ..
+  go build
+  popd || exit 1
+
   for file in $SOURCE_FILES; do
     name=${file%.*}
     if ! $OPTHIS_CMD -l "$BUILD_DIR/$name.l" \
