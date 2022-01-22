@@ -5,16 +5,135 @@
     sta chrout
 .macend
 
+.macro printNewline
+    lda #10
+    .invoke printChar
+.macend
+
 ; print prints a string given as argument to the screen
-print:
-.scope
+.macro print
     ldx #0
 _loop:
-    lda hello, x
+    lda _1, x
     beq _done
     .invoke printChar
     inx
     bne _loop
 _done:
-    rts
+.macend
+
+.macro printNum
+    lda #0
+    sta temp
+    ldx #0
+_loop:
+    lda _1, x
+    bne _done
+    .invoke printChar
+    inx
+    bne _loop
+_done:
+.macend
+
+; add16 sums two 16-bit numbers
+; _1 && _1+1 is the first number
+; _2 && _2+1 is the second number
+; _3 && _3+1 is the result
+.macro add16
+    clc
+    lda _1
+    adc _2
+    sta _3
+    lda _1 + 1
+    adc _2 + 1
+sta _3 + 1
+.macend
+
+; On entry, A=value to print
+; On exit,  A corrupted
+
+.scope
+printDec8:
+    ldx #$FF
+    sec             ; Prepare for subtraction
+_PrDec100:
+    inx
+    sbc #100
+    bcs _PrDec100   ; Count how many 100s
+    adc #100
+    jsr _PrDecDigit ; Print the 100s
+    ldx #$FF
+    sec             ; Prepare for subtraction
+_PrDec10:
+    inx
+    sbc #10
+    bcs _PrDec10    ; Count how many 10s
+    adc #10
+    jsr _PrDecDigit ; Print the 10s
+    tax             ; Pass 1s into X
+_PrDecDigit:
+    pha
+    txa             ; Save A, pass digit to A
+    ora '0
+    clc
+    adc #48         ; Convert to character and print it
+    .invoke printChar
+    pla
+    rts              ; Restore A and return
 .scend
+
+.scope
+_num: .word 0
+_pad: .byte '0
+printDec16:
+    sta _num
+    stx _num + 1
+_PrDec16:
+    ldy #8                      ; Offset to powers of ten
+_PrDec16Lp1:
+    ldx #$FF
+    sec                         ; Start with digit=-1
+_PrDec16Lp2:
+    lda _num+0
+    sbc _PrDec16Tens+0,Y
+    sta _num+0                   ; Subtract current tens
+    lda _num+1
+    sbc _PrDec16Tens+1,Y
+    sta _num+1
+    inx
+    bcs _PrDec16Lp2             ; Loop until <0
+    lda _num+0
+    adc _PrDec16Tens+0,Y
+    sta _num+0                   ; Add current tens back in
+    lda _num+1
+    adc _PrDec16Tens+1,Y
+    sta _num+1
+    txa
+    bne _PrDec16Digit           ; Not zero, print it
+    lda _pad
+    bne _PrDec16Print
+    beq _PrDec16Next            ; pad<>0, use it
+_PrDec16Digit:
+    ldx #'0
+    stx _pad                     ; No more zero padding
+    ora #'0                     ; Print this digit
+_PrDec16Print:
+    .invoke printChar
+_PrDec16Next:
+    dey
+    dey
+    bpl _PrDec16Lp1             ; Loop for next digit
+    rts
+_PrDec16Tens:
+     .word 1
+     .word 10
+     .word 100
+     .word 1000
+     .word 10000
+.scend
+
+.macro halt
+_halt:
+    nop
+    jmp _halt
+.macend

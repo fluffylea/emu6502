@@ -1,0 +1,56 @@
+; ---------------------------
+; Print 16-bit decimal number
+; ---------------------------
+; On entry, num=number to print
+;              pad=0 or pad character (eg '0' or ' ')
+; On entry at PrDec16Lp1,
+;              Y=(number of digits)*2-2, eg 8 for 5 digits
+; On exit,  A,X,Y,num,pad corrupted
+; Size        69 bytes
+; -----------------------------------------------------------------
+.scope
+printDec16:
+_PrDec16:
+    ldy #8                      ; Offset to powers of ten
+_PrDec16Lp1:
+    ldx #&FF
+    sec                          ; Start with digit=-1
+_PrDec16Lp2:
+    lda num+0
+    sbc _PrDec16Tens+0,Y
+    sta num+0                  ; Subtract current tens
+    lda num+1
+    sbc _PrDec16Tens+1,Y
+    sta num+1
+    inx
+    bcs _PrDec16Lp2            ; Loop until <0
+    lda num+0
+    adc _PrDec16Tens+0,Y
+    sta num+0                  ; Add current tens back in
+    lda num+1
+    adc _PrDec16Tens+1,Y
+    sta num+1
+    txa
+    bne _PrDec16Digit         ; Not zero, print it
+    lda pad
+    bne _PrDec16Print
+    beq _PrDec16Next          ; pad<>0, use it
+_PrDec16Digit:
+    ldx #'0
+    stx pad                     ; No more zero padding
+    ora #'0                     ; Print this digit
+_PrDec16Print:
+    .invoke printChar
+_PrDec16Next:
+    dey
+    dey
+    bpl _PrDec16Lp1            ; Loop for next digit
+    rts
+_PrDec16Tens:
+     .word 1
+     .word 10
+     .word 100
+     .word 1000
+     .word 10000
+.scend
+; -----------------------------------------------------------------

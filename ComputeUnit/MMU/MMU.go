@@ -1,41 +1,77 @@
 package MMU
 
 import (
+	"emu6502/BusUnit"
 	"emu6502/ComputeUnit/PrivRAM"
-	"emu6502/GPU"
 	"emu6502/Logger"
-	"emu6502/RAM"
-	"emu6502/ROM"
 	"fmt"
 )
 
 const (
 	RamId = iota
-	PrivramId
-	GpuId
 	RomId
+	GpuId
+	MmuId
+	PrivramId
 )
+
+const mappingSize = 2 + 4 + 2 + 1
 
 type Mapping struct {
 	virtStart uint16
 	physStart uint32
 	size      uint16
 
-	backingStore int
+	backingStore uint8
+}
+
+func getByteFromMapping(mappings []*Mapping, addr uint32) uint8 {
+	// get number of mapping from addr and mapping size
+	mappingNum := addr / mappingSize
+	// get offset from addr
+	offset := addr % mappingSize
+
+	// get mapping
+	mapping := mappings[mappingNum]
+
+	switch offset {
+	case 0:
+		return uint8(mapping.virtStart)
+	case 1:
+		return uint8(mapping.virtStart >> 8)
+	case 2:
+		return uint8(mapping.physStart)
+	case 3:
+		return uint8(mapping.physStart >> 8)
+	case 4:
+		return uint8(mapping.physStart >> 16)
+	case 5:
+		return uint8(mapping.physStart >> 24)
+	case 6:
+		return uint8(mapping.size)
+	case 7:
+		return uint8(mapping.size >> 8)
+	case 8:
+		return mapping.backingStore
+	default:
+		Logger.Warnf("MMU: getByteFromMapping: invalid offset %d", offset)
+		return 0
+	}
 }
 
 func (m *Mapping) ToString() string {
 	return fmt.Sprintf("Mapping: virtStart: 0x%04x, physStart: 0x%04x, size: 0x%04x, backingStore: %d", m.virtStart, m.physStart, m.size, m.backingStore)
 }
 
-func NewMapping(virtStart uint16, physStart uint32, size uint16, backingStore int) *Mapping {
+func NewMapping(virtStart uint16, physStart uint32, size uint16, backingStore uint8) *Mapping {
 	return &Mapping{virtStart, physStart, size, backingStore}
 }
 
 func DefaultMappings() []*Mapping {
 	return []*Mapping{
 		NewMapping(0x0000, 0x0000, 0x2000, PrivramId),
-		NewMapping(0x2000, 0x0000, 0x2000, RamId),
+		NewMapping(0x2000, 0x0000, 0x1FE0, RamId),
+		NewMapping(0x3FE0, 0x0000, 0x0020, MmuId),
 		NewMapping(0x4000, 0x0000, 0x0020, GpuId),
 		NewMapping(0x4020, 0x0000, 0xBFDF, RomId),
 	}
@@ -54,18 +90,12 @@ func verifyMapping(mappings []*Mapping) {
 }
 
 type MMU struct {
-	privRAM       *PrivRAM.PrivRAM
-	ramAddressBus *chan RAM.AddressBus
-	ramDataBus    *chan RAM.DataBus
-	romAddressBus *chan ROM.AddressBus
-	romDataBus    *chan ROM.DataBus
-	gpuAddressBus *chan GPU.AddressBus
-	gpuDataBus    *chan GPU.DataBus
-
-	mappings []*Mapping
+	connections []*BusUnit.Connection
+	privRAM     *PrivRAM.PrivRAM
+	mappings    []*Mapping
 }
 
-func NewMMU(mappings []*Mapping, ram *RAM.RAM, rom *ROM.ROM, gpu *GPU.GPU) *MMU {
+func NewMMU(mappings []*Mapping, connections []*BusUnit.Connection) *MMU {
 	if mappings == nil {
 		mappings = DefaultMappings()
 	}
@@ -84,17 +114,9 @@ func NewMMU(mappings []*Mapping, ram *RAM.RAM, rom *ROM.ROM, gpu *GPU.GPU) *MMU 
 	}
 
 	return &MMU{
-		privRAM:       PrivRAM.NewPrivRAM(mappings[0].size),
-		ramAddressBus: &ram.AddressBus,
-		ramDataBus:    &ram.DataBus,
-
-		romAddressBus: &rom.AddressBus,
-		romDataBus:    &rom.DataBus,
-
-		gpuAddressBus: &gpu.AddressBus,
-		gpuDataBus:    &gpu.DataBus,
-
-		mappings: mappings,
+		connections: connections,
+		privRAM:     PrivRAM.NewPrivRAM(mappings[0].size),
+		mappings:    mappings,
 	}
 }
 
@@ -105,26 +127,19 @@ func (m *MMU) GetByteAt(address uint16) uint8 {
 			switch mapping.backingStore {
 			case PrivramId:
 				result := m.privRAM.Read(address)
-				Logger.Debugf("Read PrivRAM[%04x] = %02x", address, result)
 				return result
 			case RamId:
-				physicalAddress := m.convertVirtualAddressIntoPhysicalAddress(address)
-				*m.ramAddressBus <- RAM.AddressBus{Rw: 'R', Data: physicalAddress}
-				result := (<-*m.ramDataBus).Data
-				Logger.Debugf("Read RAM[%04x:%04x] = %02x", address, physicalAddress, result)
-				return result
+				fallthrough
 			case RomId:
-				physicalAddress := m.convertVirtualAddressIntoPhysicalAddress(address)
-				*m.romAddressBus <- ROM.AddressBus{Rw: 'R', Data: physicalAddress}
-				result := (<-*m.romDataBus).Data
-				Logger.Debugf("Read ROM[%04x:%04x] = %02x", address, physicalAddress, result)
-				return result
+				fallthrough
 			case GpuId:
 				physicalAddress := m.convertVirtualAddressIntoPhysicalAddress(address)
-				*m.gpuAddressBus <- GPU.AddressBus{Rw: 'R', Data: physicalAddress}
-				result := (<-*m.gpuDataBus).Data
-				Logger.Debugf("Read GPU[%04x:%04x] = %02x", address, physicalAddress, result)
+				*m.connections[mapping.backingStore].AddressBus <- BusUnit.AddressBus{Rw: 'R', Data: physicalAddress}
+				result := (<-*m.connections[mapping.backingStore].DataBus).Data
 				return result
+			case MmuId:
+				physicalAddress := m.convertVirtualAddressIntoPhysicalAddress(address)
+				getByteFromMapping(m.mappings, physicalAddress)
 			default:
 				Logger.Fatalf("Unknown backing store: %d", mapping.backingStore)
 			}
@@ -150,15 +165,16 @@ func (m *MMU) SetByteAt(address uint16, data uint8) {
 				m.privRAM.Write(address, data)
 				return
 			case RamId:
-				*m.ramAddressBus <- RAM.AddressBus{Rw: 'W', Data: m.convertVirtualAddressIntoPhysicalAddress(address)}
-				*m.ramDataBus <- RAM.DataBus{Data: data}
-				return
+				fallthrough
 			case RomId:
-				Logger.Errorf("Cannot write to ROM")
-				return
+				fallthrough
 			case GpuId:
-				*m.gpuAddressBus <- GPU.AddressBus{Rw: 'W', Data: m.convertVirtualAddressIntoPhysicalAddress(address)}
-				*m.gpuDataBus <- GPU.DataBus{Data: data}
+				physicalAddress := m.convertVirtualAddressIntoPhysicalAddress(address)
+				*m.connections[mapping.backingStore].AddressBus <- BusUnit.AddressBus{Rw: 'W', Data: physicalAddress}
+				*m.connections[mapping.backingStore].DataBus <- BusUnit.DataBus{Data: data}
+				return
+			case MmuId:
+				Logger.Errorf("Writing to MMU not implemented")
 				return
 			default:
 				Logger.Fatalf("Unknown backing store: %d", mapping.backingStore)

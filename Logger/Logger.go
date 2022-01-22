@@ -1,9 +1,9 @@
 package Logger
 
 import (
-	"log"
-
-	"github.com/fatih/color"
+	"fmt"
+	"os"
+	"time"
 )
 
 const (
@@ -13,42 +13,50 @@ const (
 	LogLevelError
 )
 
+const (
+	ColorHiGreen   = "\u001b[32;1m"
+	ColorHiYellow  = "\u001b[33;1m"
+	ColorHiMagenta = "\u001b[35;1m"
+	ColorHiRed     = "\u001b[31;1m"
+	ColorHiRedBold = "\u001B[31;1m\u001b[1m"
+	ColorReset     = "\u001b[0m"
+)
+
 var ActiveLogLevel = LogLevelInfo
 
 func Debugf(format string, args ...interface{}) {
-	if ActiveLogLevel <= LogLevelDebug {
-		color.Set(color.FgHiGreen)
-		log.Printf("[DEBUG] "+format+"\n", args...)
-		color.Unset()
+	if ActiveLogLevel > LogLevelDebug {
+		return
 	}
+	t := time.Now().Format("2006-01-02 15:04:05")
+	_, _ = fmt.Fprintf(os.Stderr, "%s%s [DEBUG] %s%s\n", ColorHiGreen, t, fmt.Sprintf(format, args...), ColorReset)
 }
 
 func Infof(format string, args ...interface{}) {
-	if ActiveLogLevel <= LogLevelInfo {
-		color.Set(color.FgHiYellow)
-		log.Printf("[INFO] "+format+"\n", args...)
-		color.Unset()
+	if ActiveLogLevel > LogLevelInfo {
+		return
 	}
+	t := time.Now().Format("2006-01-02 15:04:05")
+	_, _ = fmt.Fprintf(os.Stderr, "%s%s [INFO] %s%s\n", ColorHiYellow, t, fmt.Sprintf(format, args...), ColorReset)
 }
 
 func Warnf(format string, args ...interface{}) {
-	if ActiveLogLevel <= LogLevelWarn {
-		color.Set(color.FgHiMagenta)
-		log.Printf("[WARN] "+format+"\n", args...)
-		color.Unset()
+	if ActiveLogLevel > LogLevelWarn {
+		return
 	}
+	t := time.Now().Format("2006-01-02 15:04:05")
+	_, _ = fmt.Fprintf(os.Stderr, "%s%s [WARN] %s%s\n", ColorHiMagenta, t, fmt.Sprintf(format, args...), ColorReset)
 }
 
 func Errorf(format string, args ...interface{}) {
-	if ActiveLogLevel <= LogLevelError {
-		color.Set(color.FgHiRed)
-		log.Printf("[ERROR] "+format+"\n", args...)
-		color.Unset()
+	if ActiveLogLevel > LogLevelError {
+		return
 	}
+	t := time.Now().Format("2006-01-02 15:04:05")
+	_, _ = fmt.Fprintf(os.Stderr, "%s%s [ERROR] %s%s\n", ColorHiRed, t, fmt.Sprintf(format, args...), ColorReset)
 }
 
 func Fatalf(format string, args ...interface{}) {
-	color.Set(color.FgHiRed, color.Bold)
-	defer color.Unset()
-	log.Panicf("[FATAL] "+format+"\n", args...)
+	t := time.Now().Format("2006-01-02 15:04:05")
+	panic(fmt.Sprintf("%s%s [FATAL] %s%s\n", ColorHiRedBold, t, fmt.Sprintf(format, args...), ColorReset))
 }

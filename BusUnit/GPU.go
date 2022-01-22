@@ -1,19 +1,23 @@
-package GPU
+package BusUnit
 
 import (
 	"emu6502/Logger"
 	"fmt"
+	"sync"
 )
 
 type GPU struct {
 	AddressBus chan AddressBus
 	DataBus    chan DataBus
+	halt       *sync.WaitGroup
 }
 
-func NewGPU() *GPU {
+func NewGPU(wg *sync.WaitGroup) *GPU {
+	wg.Add(1)
 	return &GPU{
 		AddressBus: make(chan AddressBus),
 		DataBus:    make(chan DataBus),
+		halt:       wg,
 	}
 }
 
@@ -30,6 +34,13 @@ func (g *GPU) Run() {
 			g.DataBus <- DataBus{Data: g.handleMemoryRead(command.Data)}
 		}
 	}
+	g.halt.Done()
+}
+
+func (g *GPU) Halt() {
+	Logger.Infof("GPU Halt")
+	close(g.AddressBus)
+	close(g.DataBus)
 }
 
 func (g *GPU) handleMemoryWrite(location uint32, data uint8) {

@@ -274,14 +274,16 @@ func (c *CPU) BPL(mode AddressMode.AddressMode) {
 }
 
 // BRK break / interrupt
-// TODO: Implement BRK
+// In this implementation, BRK triggers the emulator to switch to debug and
+// single-step mode.
 func (c *CPU) BRK(mode AddressMode.AddressMode) {
+	Logger.Debugf("BRK %s", mode.SelectedMode)
 	if !AddressMode.IsImplied(mode) {
 		Logger.Fatalf("Invalid Instruction BRK %s", mode.SelectedMode)
 	}
-	Logger.Errorf("BRK is not properly implemented")
+	Logger.ActiveLogLevel = Logger.LogLevelDebug
 	c.ps.brk = true
-	c.irq <- true
+	c.pc++
 }
 
 // BVC branches on overflow clear

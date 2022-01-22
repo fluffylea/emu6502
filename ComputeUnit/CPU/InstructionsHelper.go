@@ -189,7 +189,7 @@ func (c *CPU) PushWordToStack(data uint16) {
 }
 
 // PullWordFromStack pulls an entire word from the stack
-func (c CPU) PullWordFromStack() (data uint16) {
+func (c *CPU) PullWordFromStack() (data uint16) {
 	dataLow := uint16(c.PullFromStack())
 	dataHigh := uint16(c.PullFromStack()) << 8
 

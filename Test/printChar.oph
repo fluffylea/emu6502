@@ -1,0 +1,29 @@
+; Start of ROM
+.org $4020
+.outfile "printChar.rom"
+.include "stdlib.oph"
+
+start:
+    ldx #64
+loop:
+    inx
+    txa
+    .invoke printChar
+    cmp #90
+    bne loop
+    lda #10
+    .invoke printChar
+end:
+    .invoke halt
+
+; NMI Vector
+.advance $FFFA
+.word end
+
+; RESET Vector
+.advance $FFFC
+.word start
+
+; IRQ Vector
+.advance $FFFE
+.word end

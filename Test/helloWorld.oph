@@ -2,24 +2,15 @@
 
 ; Start of ROM
 .org $4020
-.outfile "../hello.rom"
+.outfile "helloWorld.rom"
 .include "stdlib.oph"
 
 start:
-    jsr print
-
-    ldx #64
-loop:
-    inx
-    txa
-    .invoke printChar
-    cmp #90
-    bne loop
-
+    .invoke print hello
     lda #10
     .invoke printChar
 end:
-    brk
+    .invoke halt
 
 hello: .byte "Hello World!", 10, 0
 

@@ -1,21 +1,23 @@
 package main
 
 import (
-	"emu6502/ComputeUnit/CPU"
-	"emu6502/ComputeUnit/MMU"
-	"emu6502/GPU"
+	"emu6502/BusUnit"
+	"emu6502/ComputeUnit"
 	"emu6502/Logger"
-	"emu6502/RAM"
-	"emu6502/ROM"
 	"flag"
 	"strings"
+	"time"
 )
 
 var romFilename string
+var runtimeLimit int64
 
 func init() {
 	loglevel := flag.String("loglevel", "debug", "Debug mode")
-	romFilenamePtr := flag.String("rom", "hello.rom", "Path to the ROM file")
+	romFilenamePtr := flag.String("rom", "hello.rom", "Path to the ROM `file`")
+	runtimeLimitPtr := flag.Int64("runtime", 10000, "Limit the runtime to the given number of `seconds`")
+	Logger.DebugListingFile = flag.String("listing", "", "Path to the listing `file`")
+	Logger.DebugMappingFile = flag.String("mapping", "", "Path to the mapping `file`")
 
 	flag.Parse()
 
@@ -29,25 +31,28 @@ func init() {
 	}
 
 	romFilename = *romFilenamePtr
+	runtimeLimit = *runtimeLimitPtr
 }
 
 func main() {
-	ram := RAM.NewRAM()
-	rom := ROM.NewROM()
-	gpu := GPU.NewGPU()
+	busUnit := BusUnit.NewBusUnit()
 
-	mappings := MMU.DefaultMappings()
-	mmu := MMU.NewMMU(mappings, ram, rom, gpu)
-	cpu := CPU.NewCPU(mmu)
+	cu1 := ComputeUnit.NewComputeUnit(busUnit)
+	time.Now()
 
-	gpu.Reset()
-	ram.Reset()
-	rom.Reset(romFilename)
+	busUnit.Reset(romFilename)
+	busUnit.Run()
 
-	go gpu.Run()
-	go ram.Run()
-	go rom.Run()
+	cu1.Reset()
+	cu1.Run()
 
-	cpu.Reset()
-	cpu.Run()
+	time.Sleep(time.Second * time.Duration(runtimeLimit))
+	Logger.Infof("System exceeded runtime limit")
+
+	Logger.Infof("Shutting down")
+
+	cu1.Halt()
+	busUnit.Halt()
+
+	Logger.Infof("Shutdown complete")
 }

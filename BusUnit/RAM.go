@@ -1,6 +1,9 @@
-package RAM
+package BusUnit
 
-import "emu6502/Logger"
+import (
+	"emu6502/Logger"
+	"sync"
+)
 
 const ramSize uint32 = 0xFFFF
 
@@ -10,14 +13,19 @@ type RAM struct {
 
 	AddressBus chan AddressBus
 	DataBus    chan DataBus
+
+	halt *sync.WaitGroup
 }
 
 // NewRAM is the constructor for a new Memory
-func NewRAM() *RAM {
+func NewRAM(wg *sync.WaitGroup) *RAM {
+	wg.Add(1)
 	return &RAM{
 		ram:        [ramSize]uint8{},
 		AddressBus: make(chan AddressBus),
-		DataBus:    make(chan DataBus)}
+		DataBus:    make(chan DataBus),
+		halt:       wg,
+	}
 }
 
 // Reset resets the Memory to its initial state
@@ -39,6 +47,14 @@ func (m *RAM) Run() {
 			m.DataBus <- DataBus{Data: m.handleMemoryRead(command.Data)}
 		}
 	}
+
+	m.halt.Done()
+}
+
+func (m *RAM) Halt() {
+	Logger.Infof("RAM Halt")
+	close(m.AddressBus)
+	close(m.DataBus)
 }
 
 func (m *RAM) handleMemoryWrite(location uint32, data uint8) {

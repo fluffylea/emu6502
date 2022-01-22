@@ -1,0 +1,45 @@
+; Start of ROM
+.org $4020
+.outfile "printDec8.rom"
+.include "stdlib.oph"
+
+number1: .word 16
+number2: .word 420
+result: .word 0
+
+start:
+    .invoke add16 number1, number2, result
+
+    lda number1
+    ldx number1 + 1
+    brk
+    jsr printDec16
+
+    lda #43 ; +
+    .invoke printChar
+
+    lda number2
+    ldx number2 + 1
+    jsr printDec16
+
+    lda #61 ; =
+    .invoke printChar
+
+    lda result
+    ldx result + 1
+    jsr printDec16
+    .invoke printNewline
+end:
+    .invoke halt
+
+; NMI Vector
+.advance $FFFA
+.word end
+
+; RESET Vector
+.advance $FFFC
+.word start
+
+; IRQ Vector
+.advance $FFFE
+.word end

@@ -4,3 +4,5 @@ emu6502.exe
 .vscode
 *.l
 *.m
+Test/build
+Test/Ophis

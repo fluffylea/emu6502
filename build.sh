@@ -9,4 +9,7 @@ if ! ./Ophis/bin/ophis -l helloWorld.l -m helloWorld.m helloWorld.oph; then
 fi
 cd ..
 
-go run .
+go run . \
+	-loglevel info \
+	-listing Test/helloWorld.l \
+	-mapping Test/helloWorld.m

@@ -1,0 +1,34 @@
+; Start of ROM
+.org $4020
+.outfile "printDec8.rom"
+.include "stdlib.oph"
+
+start:
+    lda #0
+loop:
+    pha
+    jsr printDec8
+    pla
+    tax
+
+    lda #10
+    .invoke printChar
+
+    txa
+    adc #1
+    cmp #$FF
+    bne loop
+end:
+    .invoke halt
+
+; NMI Vector
+.advance $FFFA
+.word end
+
+; RESET Vector
+.advance $FFFC
+.word start
+
+; IRQ Vector
+.advance $FFFE
+.word end
