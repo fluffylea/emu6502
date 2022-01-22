@@ -1,0 +1,77 @@
+; Start of ROM
+.org $4020
+.outfile "fib.rom"
+.include "stdlib.oph"
+
+.alias number1_low $0300
+.alias number1_high $0301
+.alias number2_low $0302
+.alias number2_high $0303
+.alias result_low $0304
+.alias result_high $0305
+
+.alias tmp_low $0306
+.alias tmp_high $0307
+
+.macro printNumber
+    lda _1
+    ldx _2
+    jsr printDec16
+.macend
+
+start:
+    .invoke print start_text
+    lda #0
+    sta number1_low
+    sta number1_high
+    sta number2_high
+    sta result_low
+    sta result_high
+    lda #1
+    sta number2_low
+
+    .invoke printNumber number1_low, number1_high
+    .invoke printNewline
+
+    .invoke printNumber number2_low, number2_high
+    .invoke printNewline
+
+loop:
+    .invoke add16 number1_low, number2_low, result_low
+    .invoke printNumber result_low, result_high
+    .invoke printNewline
+
+    ; Move Number2 to Number1
+    lda number2_high
+    sta number1_high
+    lda number2_low
+    sta number1_low
+
+    ; Move result to Number2
+    lda result_low
+    sta number2_low
+    lda result_high
+    sta number2_high
+
+    ldx result_high
+    cpx #150
+    bcc loop
+end:
+    .invoke print finish_text
+    .invoke halt
+
+start_text:    .byte "Computing the Fibonacci sequence:", 10, 0
+finish_text:   .byte "Done.", 10, 0
+
+
+; NMI Vector
+.advance $FFFA
+.word end
+
+; RESET Vector
+.advance $FFFC
+.word start
+
+; IRQ Vector
+.advance $FFFE
+.word end

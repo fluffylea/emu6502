@@ -87,7 +87,6 @@ _PrDecDigit:
 .scend
 
 ; printDec16 prints a 16-bit decimal number stored in the accumulator and X
-; The padding is stored in Y
 .scope
 printDec16:
     sta printDec16_num1

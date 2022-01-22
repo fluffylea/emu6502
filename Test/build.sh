@@ -9,6 +9,7 @@ SOURCE_FILES=(
   "printChar.oph"
   "printDec8.oph"
   "printDec16.oph"
+  "fib.oph"
 )
 
 function clean() {
@@ -52,7 +53,7 @@ function run_single() {
   file=$1
   name=${file%.*}
   if ! $EMU6502_CMD -loglevel info \
-                    -runtime 1201231 \
+                    -runtime 1 \
                     -rom "$BUILD_DIR/$name.rom" \
                     -mapping "$BUILD_DIR/$name.m" \
                     -listing "$BUILD_DIR/$name.l"; then
